@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2022 the Regents of the University of California
 /** @file
     Declares ibis::selectClause class.
 */
@@ -76,6 +76,13 @@ namespace ibis {
 ///   as stdpop.  This computation is performed in double precision.
 /// - group_concat(expression): concatenate all values of the given
 ///   expression in the string form.
+/// - first(expression)/last(expression): return the first/last (one) row
+///   of the given expression.  Note that the aggregation function first
+///   and last return the value with the same type as the expression is the
+///   expression is a column name.  When an arithmatic expressions is given
+///   as the argument to this function, it will return a double precision
+///   value because all arithmatic expressions are evaluated in double
+///   precision inside FastBit.
 ///
 /// Each term may optionally be followed by an alias for the term.  The
 /// alias must be a valid SQL name.  The alias may optionally be preceded
@@ -161,8 +168,8 @@ public:
     /// Functions related to internal aggregation operations.
     ///@{
     /// Aggregation functions.  @note "Agregado" is Spanish for aggregate.
-    enum AGREGADO {NIL_AGGR, AVG, CNT, MAX, MIN, SUM, DISTINCT,
-		   VARPOP, VARSAMP, STDPOP, STDSAMP, MEDIAN, CONCAT};
+    enum AGREGADO {NIL_AGGR, AVG, CNT, MAX, MIN, SUM, DISTINCT, MEDIAN, CONCAT,
+		   FIRST, LAST, VARPOP, VARSAMP, STDPOP, STDSAMP};
     /// The number of arithmetic expressions inside the select clause.
     uint32_t aggSize() const {return atms_.size();}
     /// Return the aggregation function used for the ith term.

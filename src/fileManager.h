@@ -1,7 +1,7 @@
 // File: $Id$
 // Author: K. John Wu <John.Wu at acm.org>
 //         Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 University of California
+// Copyright (c) 2000-2022 University of California
 #ifndef IBIS_FILEMANAGER_H
 #define IBIS_FILEMANAGER_H
 /// @file
@@ -253,13 +253,13 @@ public:
     const char* filename() const {return name;}
 
     /// Is the storage object empty?
-    bool empty() const {return (m_begin == nullptr || m_begin >= m_end);}
+    bool empty() const {return (m_begin == 0 || m_begin >= m_end);}
     /// Return the size (bytes) of the object.
     size_t size() const {
-	return (m_begin!=nullptr && m_begin<m_end ? m_end-m_begin : 0U);}
+	return (m_begin!=0 && m_begin<m_end ? m_end-m_begin : 0);}
     /// Return the number of bytes contained in the object.
     size_t bytes() const {
-	return (m_begin!=nullptr && m_begin<m_end ? m_end-m_begin : 0U);}
+	return (m_begin!=0 && m_begin<m_end ? m_end-m_begin : 0);}
     void enlarge(size_t nelm=0);
 
     /// Release the control of the memory to the caller as a raw pointer.
@@ -328,7 +328,7 @@ public:
     virtual void beginUse();
     virtual void endUse();
     // is the read-only file mapped ?
-    virtual bool isFileMap() const {return (mapped != 0U);}
+    virtual bool isFileMap() const {return (mapped != 0);}
     int disconnectFile();
 
     // IO functions

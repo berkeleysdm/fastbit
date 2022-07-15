@@ -1,7 +1,7 @@
 /* File: $Id$
    Author: John Wu <John.Wu at acm.org>
       Lawrence Berkeley National Laboratory
-   Copyright (c) 2001-20164-2014 the Regents of the University of California
+   Copyright (c) 2001-2022 the Regents of the University of California
 */
 #ifndef IBIS_IAPI_H
 #define IBIS_IAPI_H
@@ -157,9 +157,11 @@ extern "C" {
     /** Build index. */
     int fastbit_iapi_build_index(const char*, const char*);
 
-    /** Write index into three arrays.  This function allocates the memory
-        space for three arrays named keys, offsets and bms.  The caller is
-        responsible for freeing these three arrays.
+    /** Write index into three arrays.
+
+        @note This function allocates the memory space for three arrays
+        named keys, offsets and bms.  The caller is responsible for freeing
+        these three arrays.
     */
     int fastbit_iapi_deconstruct_index
     (const char*, double**keys, uint64_t*nkeys,

@@ -1,7 +1,7 @@
 // File: $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2006-2016 the Regents of the University of California
+// Copyright (c) 2006-2022 the Regents of the University of California
 //
 #include "capi.h"
 #include "part.h"       // ibis::part, ibis::column, ibis::tablex
@@ -87,7 +87,7 @@ public:
             LOGGER(ibis::gVerbose >= 0)
                 << "Warning -- attempting to delete list of data "
                 "partitions while some are still in use";
-            throw "can not delete list of data tables while they are in use";
+            // throw "can not delete list of data tables while they are in use";
         }
     }
 

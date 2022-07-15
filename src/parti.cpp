@@ -1,6 +1,6 @@
 //File: $Id$
 // Author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 //
 // Implement the ibis::part functions that modify a partition.
 ////////////////////////////////////////////////////////////////////////
@@ -18,8 +18,14 @@
 
 /// Sort rows with the lowest cardinality column first.  Only
 /// integer-valued columns are used in sorting.  Returns the number of rows
-/// reordered when successful, otherwise return a negative number and the
-/// base data is corrupt!
+/// reordered when successful, otherwise return a negative number to
+/// indicate error.
+///
+/// @warning When this function returns a negative number, the function
+/// might leave the data files in a undefined state.  There is no way to
+/// recover from this error.  The users should keep a replica of the data
+/// before attempting to reorder!  This warning applies to all variants of
+/// reorder.
 ///
 /// @note A data partition declared readonly at construction time can be
 /// reordered because reordering does not change the relational algebra
@@ -96,6 +102,12 @@ void ibis::part::gatherSortKeys(ibis::table::stringArray& names) {
 } // ibis::part::getherSortKeys
 
 /// Reorder the rows using the given column list.
+///
+/// @warning When this function returns a negative number, the function
+/// might leave the data files in a undefined state.  There is no way to
+/// recover from this error.  The users should keep a replica of the data
+/// before attempting to reorder!  This warning applies to all variants of
+/// reorder.
 long ibis::part::reorder(const ibis::table::stringArray& names) {
     std::vector<bool> direc;
     return reorder(names, direc);
@@ -107,6 +119,12 @@ long ibis::part::reorder(const ibis::table::stringArray& names) {
 /// directions is present, the value of directions is interpreted as
 /// whether or not the column is to be order in ascending order.  The
 /// direction defaults to the ascending order if the value is not present.
+///
+/// @warning When this function returns a negative number, the function
+/// might leave the data files in a undefined state.  There is no way to
+/// recover from this error.  The users should keep a replica of the data
+/// before attempting to reorder!  This warning applies to all variants of
+/// reorder.
 ///
 /// @note The sorting operation can proceed on a data partition marked as
 /// read-only at construction time.  If the data partition is not

@@ -1,7 +1,7 @@
 // $Id$
 //	Author: John Wu <John.Wu at ACM.org>
 //              Lawrence Berkeley National Laboratory
-//	Copyright (c) 2000-2016 the Regents of the University of California
+//	Copyright (c) 2000-2022 the Regents of the University of California
 #ifndef BITVECTOR64_H
 #define BITVECTOR64_H
 ///@file
@@ -131,7 +131,8 @@ public:
 
     /// Return the number of bits that are one.
     word_t cnt() const {
-	if (nset==0) do_cnt();
+	if (nset==0 && !m_vec.empty())
+            do_cnt();
         return (nset+cnt_ones(active.val));
     };
 

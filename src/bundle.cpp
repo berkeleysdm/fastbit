@@ -1,7 +1,7 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
 //         Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 //
 // This file contains the implementation details of the classes defined in
 // bundle.h
@@ -1521,9 +1521,15 @@ ibis::bundles::bundles(const ibis::part& tbl, const ibis::selectClause& cmps,
         }
     }
     catch (...) {
-        LOGGER(ibis::gVerbose >= 0)
-            << "Warning -- bundles::ctor received an exception, "
-            "start cleaning up" IBIS_FILE_LINE;
+        if (ibis::gVerbose >= 0) {
+            ibis::util::logger lg;
+            lg() << "Warning -- bundles::ctor received an exception, "
+                "start cleaning up" IBIS_FILE_LINE;
+            if (ibis::gVerbose > 3) {
+                lg() << "\n\n";
+                ibis::fileManager::instance().printStatus(lg());
+            }
+        }
         clear();
         throw; // rethrow the exception
     }

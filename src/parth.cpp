@@ -1,6 +1,6 @@
 // File $Id$
 // Author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 //
 // Implements ibis::part histogram functions.
 #include "index.h"      // ibis::index::divideCounts
@@ -110,7 +110,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *cname,
     case ibis::SHORT:
     case ibis::INT: {
         std::unique_ptr< array_t<int32_t> > vals(col->selectInts(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 ++ counts[static_cast<uint32_t>(((*vals)[i] - begin) / stride)];
             }
@@ -124,7 +124,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *cname,
     case ibis::USHORT:
     case ibis::UINT: {
         std::unique_ptr< array_t<uint32_t> > vals(col->selectUInts(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 ++ counts[static_cast<uint32_t>(((*vals)[i] - begin) / stride)];
             }
@@ -136,7 +136,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *cname,
     case ibis::ULONG:
     case ibis::LONG: {
         std::unique_ptr< array_t<int64_t> > vals(col->selectLongs(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 ++ counts[static_cast<uint32_t>(((*vals)[i] - begin) / stride)];
             }
@@ -147,7 +147,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *cname,
         break;}
     case ibis::FLOAT: {
         std::unique_ptr< array_t<float> > vals(col->selectFloats(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 ++ counts[static_cast<uint32_t>(((*vals)[i] - begin) / stride)];
             }
@@ -158,7 +158,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *cname,
         break;}
     case ibis::DOUBLE: {
         std::unique_ptr< array_t<double> > vals(col->selectDoubles(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 ++ counts[static_cast<uint32_t>(((*vals)[i] - begin) / stride)];
             }
@@ -292,7 +292,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *bname,
     case ibis::SHORT:
     case ibis::INT: {
         std::unique_ptr< array_t<int32_t> > vals(bcol->selectInts(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 weights[static_cast<uint32_t>(((*vals)[i] - begin) / stride)]
                     += (*wts)[i];
@@ -307,7 +307,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *bname,
     case ibis::USHORT:
     case ibis::UINT: {
         std::unique_ptr< array_t<uint32_t> > vals(bcol->selectUInts(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 weights[static_cast<uint32_t>(((*vals)[i] - begin) / stride)]
                     += (*wts)[i];
@@ -320,7 +320,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *bname,
     case ibis::ULONG:
     case ibis::LONG: {
         std::unique_ptr< array_t<int64_t> > vals(bcol->selectLongs(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 weights[static_cast<uint32_t>(((*vals)[i] - begin) / stride)]
                     += (*wts)[i];
@@ -332,7 +332,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *bname,
         break;}
     case ibis::FLOAT: {
         std::unique_ptr< array_t<float> > vals(bcol->selectFloats(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 weights[static_cast<uint32_t>(((*vals)[i] - begin) / stride)]
                     += (*wts)[i];
@@ -344,7 +344,7 @@ long ibis::part::get1DDistribution(const char *constraints, const char *bname,
         break;}
     case ibis::DOUBLE: {
         std::unique_ptr< array_t<double> > vals(bcol->selectDoubles(mask));
-        if (vals.get() != nullptr) {
+        if (vals.get() != 0) {
             for (uint32_t i = 0; i < vals->size(); ++ i) {
                 weights[static_cast<uint32_t>(((*vals)[i] - begin) / stride)]
                     += (*wts)[i];

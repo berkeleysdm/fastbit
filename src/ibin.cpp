@@ -1,6 +1,6 @@
 // $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 //
 // This file contains the implementation of the classes ibis::bin.  The
 // header for the class is in ibin.h.
@@ -31,7 +31,7 @@ ibis::bin::bin(const ibis::column* c, const char* f)
         if (f != 0 && 0 == read(f)) // try to read the file as an index file
            return;
 
-        if (c == nullptr) return;  // nothing can be done
+        if (c == 0) return;  // nothing can be done
         if (c->isNumeric() == false) {
             LOGGER(ibis::gVerbose > 1)
                 << "Warning -- bin can only work on numerical values";
@@ -126,7 +126,7 @@ ibis::bin::bin(const ibis::column* c, const char* f)
 ibis::bin::bin(const ibis::column* c, const char* f,
                const array_t<double>& bd)
     : ibis::index(c), nobs(0) {
-    if (c == nullptr) return;
+    if (c == 0) return;
     if (c->isNumeric() == false) {
         LOGGER(ibis::gVerbose > 1)
             << "Warning -- bin can only work on numerical values";
@@ -135,7 +135,7 @@ ibis::bin::bin(const ibis::column* c, const char* f,
     try {
         binning(f, bd);
         const char* spec = col->indexSpec();
-        if (spec == nullptr || *spec == 0) {
+        if (spec == 0 || *spec == 0) {
             std::string idxnm;
             if (c->partition() != 0) {
                 idxnm = c->partition()->name();
@@ -176,7 +176,7 @@ ibis::bin::bin(const ibis::column* c, const char* f,
 ibis::bin::bin(const ibis::column* c, const char* f,
                const std::vector<double>& bd)
     : ibis::index(c), nobs(0) {
-    if (c == nullptr) return;
+    if (c == 0) return;
     if (c->isNumeric() == false) {
         LOGGER(ibis::gVerbose > 1)
             << "Warning -- bin can only work on numerical values";
@@ -185,7 +185,7 @@ ibis::bin::bin(const ibis::column* c, const char* f,
     try {
         binning(f, bd);
         const char* spec = col->indexSpec();
-        if (spec == nullptr || *spec == 0) {
+        if (spec == 0 || *spec == 0) {
             std::string idxnm;
             if (c->partition()) {
                 idxnm = c->partition()->name();
@@ -621,7 +621,7 @@ int ibis::bin::read(int fdes, size_t start,
 
 /// Read from a reference counted piece of memory.
 int ibis::bin::read(ibis::fileManager::storage* st) {
-    if (st == nullptr) return -1;
+    if (st == 0) return -1;
     clear(); // clear the existing content
     str = st;
 
@@ -743,7 +743,7 @@ uint32_t ibis::bin::locate(const double& val) const {
 /// @note This function does not attempt to clear the content of the
 /// current data structure, the caller is responsible for this task!
 void ibis::bin::binning(const char* f, const std::vector<double>& bd) {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (bd.size() <= 2) {
         // bd has no valid values, parse bin spec in a minimal way
         setBoundaries(f);
@@ -800,7 +800,7 @@ void ibis::bin::binning(const char* f, const std::vector<double>& bd) {
 } // ibis::bin::binning (specified bin boundaries)
 
 void ibis::bin::binning(const char* f, const array_t<double>& bd) {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (bd.size() <= 2) {
         // bd has no valid values, parse bin spec in a minimal way
         setBoundaries(f);
@@ -858,7 +858,7 @@ void ibis::bin::binning(const char* f, const array_t<double>& bd) {
 /// the bitvectors for each bin.  The caller must have setup the bounds
 /// already.
 void ibis::bin::binning(const char* f) {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     horometer timer;
     if (ibis::gVerbose > 4)
@@ -1709,7 +1709,7 @@ void ibis::bin::binning(const char* f) {
 // binning with reordering
 template <typename E>
 void ibis::bin::binningT(const char* f) {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     std::string evt="coumn[";
     evt += col->fullname();
@@ -2220,14 +2220,14 @@ long ibis::bin::checkBin1(const ibis::qRange& cmp, uint32_t jbin,
 long ibis::bin::checkBin(const ibis::qRange& cmp, uint32_t jbin,
                          ibis::bitvector& res) const {
     res.clear();
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
     long ierr = 0;
     if (jbin > nobs) { // out of range, no hits
         return ierr;
     }
-    if (bits[jbin] == nullptr)
+    if (bits[jbin] == 0)
         activate(jbin);
-    if (bits[jbin] == nullptr) { // empty bin
+    if (bits[jbin] == 0) { // empty bin
         return ierr;
     }
     if (bits[jbin]->cnt() == 0) { // empty bin
@@ -2307,7 +2307,7 @@ long ibis::bin::checkBin(const ibis::qRange& cmp, uint32_t jbin,
                          const ibis::bitvector& mask,
                          ibis::bitvector& res) const {
     res.clear();
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
     long ierr = 0;
     if (jbin > nobs) { // out of range, no hits
         return ierr;
@@ -2388,7 +2388,7 @@ long ibis::bin::checkBin(const ibis::qRange& cmp, uint32_t jbin,
 
 template <typename E>
 void ibis::bin::scanAndPartition(const array_t<E> &varr, unsigned eqw) {
-    if (varr.empty() || col == nullptr) return;
+    if (varr.empty() || col == 0) return;
 
     nrows = varr.size();
     uint32_t nbins = parseNbins(*col);
@@ -2589,10 +2589,10 @@ void ibis::bin::scanAndPartition(const array_t<E> &varr, unsigned eqw) {
 /// This construction function is designed to handle the full spectrum of
 /// binning specifications.
 void ibis::bin::construct(const char* df) {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     const char* spec = col->indexSpec();
-    if (spec == nullptr || *spec == 0) {
+    if (spec == 0 || *spec == 0) {
         std::string idxnm(col->fullname());
         idxnm += ".index";
         spec = ibis::gParameters()[idxnm.c_str()];
@@ -2607,7 +2607,7 @@ void ibis::bin::construct(const char* df) {
             << ", assume the data is already in memory";
     }
 
-    bool grn = (spec == nullptr || *spec == 0 || strstr(spec, "precision=") != 0 ||
+    bool grn = (spec == 0 || *spec == 0 || strstr(spec, "precision=") != 0 ||
                 strstr(spec, "prec=") != 0 || strstr(spec, "automatic") != 0 ||
                 strstr(spec, "default") != 0);
     if (grn == false && spec != 0 && *spec != 0) {
@@ -2935,7 +2935,7 @@ void ibis::bin::construct(const array_t<E>& varr) {
     if (varr.empty()) return; // can not do anything with an empty array
 
     const char* spec = (col ? col->indexSpec() : static_cast<const char*>(0));
-    bool grn = (spec == nullptr || *spec == 0 || strstr(spec, "precision=") != 0 ||
+    bool grn = (spec == 0 || *spec == 0 || strstr(spec, "precision=") != 0 ||
                 strstr(spec, "prec=") != 0 || strstr(spec, "automatic") != 0 ||
                 strstr(spec, "default") != 0);
     if (grn == false && spec != 0 && *spec != 0) {
@@ -3113,7 +3113,7 @@ void ibis::bin::setBoundaries(const array_t<E>& varr) {
                 str = strpbrk(str, ",; \t()/>");
                 str += strspn(str, ",; \t"); // skip space
                 bool add = (progress == 15);
-                if (str == nullptr) { // end of string
+                if (str == 0) { // end of string
                     add = 1;
                 }
                 else if (*str == '/' || *str == '>') {
@@ -3810,10 +3810,10 @@ uint32_t ibis::bin::parseNbins(const ibis::column &c) {
 /// - UINT_MAX -- default value if no index specification is found.
 unsigned ibis::bin::parseScale(const ibis::column &c) {
     const char* bspec = c.indexSpec();
-    if (bspec == nullptr) {
+    if (bspec == 0) {
         if (c.partition() != 0)
             bspec = c.partition()->indexSpec();
-        if (bspec == nullptr) {
+        if (bspec == 0) {
             std::string tmp;
             if (c.partition() != 0) {
                 tmp = c.partition()->name();
@@ -3983,7 +3983,7 @@ unsigned ibis::bin::parsePrec(const ibis::column &c) {
 // add bin boundaries to array bounds
 void ibis::bin::addBounds(double lbd, double rbd, uint32_t nbins,
                           uint32_t eqw) {
-    if (col == nullptr) return;
+    if (col == 0) return;
     double diff = rbd - lbd;
     if (!(diff > DBL_MIN)) { // rbd <= lbd, or invalid number
         if (fabs(lbd) < DBL_MAX)
@@ -4442,10 +4442,10 @@ void ibis::bin::addBounds(double lbd, double rbd, uint32_t nbins,
     }
 } // ibis::bin::addBounds
 
-// The optional argument @c nbins can either be set outside or set to
+/// The optional argument @c nbins can either be set outside or set to
 /// be the return value of function parseNbins.
 void ibis::bin::scanAndPartition(const char* f, unsigned eqw, uint32_t nbins) {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     histogram hist; // a histogram
     if (nbins <= 1)
@@ -4634,18 +4634,18 @@ void ibis::bin::scanAndPartition(const char* f, unsigned eqw, uint32_t nbins) {
 /// file name could be specified throught binFile="filename" option of a
 /// bin specification.
 void ibis::bin::readBinBoundaries(const char *fnm, uint32_t nb) {
-    if (fnm == nullptr || *fnm == 0) return;
+    if (fnm == 0 || *fnm == 0) return;
 
     char buf[MAX_LINE];
     FILE *fptr = fopen(fnm, "r");
-    if (fptr == nullptr) {
+    if (fptr == 0) {
         if (col != 0 && col->partition() != 0 &&
             col->partition()->currentDataDir() != 0) {
             std::string fullname = col->partition()->currentDataDir();
             fullname += FASTBIT_DIRSEP;
             fullname += fnm;
             fptr = fopen(fullname.c_str(), "r");
-            if (fptr == nullptr) {
+            if (fptr == 0) {
                 col->logWarning("bin::readBinBoundaries",
                                 "failed to open file \"%s\"",
                                 fnm);
@@ -4690,7 +4690,7 @@ void ibis::bin::readBinBoundaries(const char *fnm, uint32_t nb) {
 /// @note If equal weight is specified, it takes precedence over other
 /// specifications.
 void ibis::bin::setBoundaries(const char* f) {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     uint32_t eqw = parseScale(*col);
 
@@ -4835,7 +4835,7 @@ void ibis::bin::setBoundaries(const char* f) {
                     str += strspn(str, ",; \t"); // skip space
                 bool add = (progress == 15);
                 if (! add) {
-                    if (str == nullptr) { // end of string
+                    if (str == 0) { // end of string
                         add = 1;
                     }
                     else if (*str == '/' || *str == '>') {
@@ -5048,7 +5048,7 @@ void ibis::bin::setBoundaries(array_t<double>& bnds,
                               const ibis::bin& idx1,
                               const array_t<uint32_t> cnt1,
                               const array_t<uint32_t> cnt0) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     uint32_t numbs = cnt1.size();
     bnds.clear();
     bnds.reserve(numbs);
@@ -5285,7 +5285,7 @@ void ibis::bin::setBoundaries(array_t<double>& bnds,
 // *** boundaries as this.
 void ibis::bin::setBoundaries(array_t<double>& bnds,
                               const ibis::bin& bin0) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     uint32_t i;
     bnds.resize(nobs);
@@ -5969,7 +5969,7 @@ void ibis::bin::speedTest(std::ostream& out) const {
     }
 
     for (uint32_t i = 1; i < bits.size(); ++ i) {
-        if (bits[i-1] == nullptr || bits[i] == nullptr)
+        if (bits[i-1] == 0 || bits[i] == 0)
             continue;
         int64_t ocnt, osize; // the size of the output of operation
         ibis::bitvector* tmp;
@@ -6098,14 +6098,14 @@ void ibis::bin::print(std::ostream& out) const {
                     << bits[i]->size() << " bits, but expected " << nrows;
         }
         if (nrows < cnt) {
-            out << "Warning -- There are a total " << cnt << " set bits out of "
-                << nrows << " bits in an index for " << (col ? col->name() : "?")
-                << "\n";
+            out << "Warning -- There are " << cnt
+                << " set bits, which is more than " << nrows << " rows for "
+                << (col ? col->name() : "?") << "\n";
         }
         else if (nrows > cnt) {
-            out << "There are a total " << cnt << " set bits out of " << nrows
-                << " bits -- there are probably NULL values in column "
-                << (col ? col->name() : "?") << "\n";
+            out << "There are only " << cnt << " set bits out of " << nrows
+                << " total rows -- maybe some bit vectors are not active or "
+                "NULL values in column " << (col ? col->name() : "?") << "\n";
         }
     }
     else if (nobs > 0) { // the short form
@@ -6155,7 +6155,7 @@ void ibis::bin::print(std::ostream& out, const uint32_t tot,
                     << " bits, but " << nrows << " are expected\n";
         }
         for (i = 1; i < nobs; ++ i) {
-            if (bits[i] == nullptr) {
+            if (bits[i] == 0) {
                 ++ omt;
                 continue;
             }
@@ -6255,7 +6255,7 @@ long ibis::bin::append(const array_t<uint32_t>& ind) {
 
 /// Create index for the data in df and append the result to the index in dt.
 long ibis::bin::append(const char* dt, const char* df, uint32_t nnew) {
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
     if (nnew == 0) return 0;
 
     const uint32_t nold =
@@ -6297,7 +6297,7 @@ long ibis::bin::append(const char* dt, const char* df, uint32_t nnew) {
         }
     }
 
-    if (bin0 == nullptr) {
+    if (bin0 == 0) {
         if (col->type() == ibis::TEXT) {
             fnm.erase(fnm.size()-3);
             fnm += "int";
@@ -6315,7 +6315,7 @@ long ibis::bin::append(const char* dt, const char* df, uint32_t nnew) {
             bin0 = new ibis::bin(col, df, bounds);
         }
     }
-    if (bin0 == nullptr) {
+    if (bin0 == 0) {
         return 0;
     }
     if (bits.empty() || nrows == 0) {
@@ -6651,13 +6651,13 @@ long ibis::bin::evaluate(const ibis::qContinuousRange& expr,
     if (ierr0 < 0 || ierr1 < 0) {
         ibis::bitvector mask;
         if (ierr0 < 0) {
-            if (bits[cand0] == nullptr)
+            if (bits[cand0] == 0)
                 activate(cand0);
             if (bits[cand0] != 0)
                 mask.copy(*(bits[cand0]));
         }
         if (ierr1 < 0) {
-            if (bits[hit1] == nullptr)
+            if (bits[hit1] == 0)
                 activate(hit1);
             if (bits[hit1] != 0) {
                 if (mask.size() != bits[hit1]->size())
@@ -6795,13 +6795,13 @@ void ibis::bin::estimate(const ibis::qContinuousRange& expr,
         if (cand0 < hit0 || (cand1 > hit1 && hit1 < nobs)) {
             upper.copy(lower);
             if (cand0 < hit0) {
-                if (bits[cand0] == nullptr)
+                if (bits[cand0] == 0)
                     activate(cand0);
                 if (bits[cand0] != 0)
                     upper |= *(bits[cand0]);
             }
             if (cand1 > hit1 && hit1 < nobs) {
-                if (bits[hit1] == nullptr)
+                if (bits[hit1] == 0)
                     activate(hit1);
                 if (bits[hit1] != 0)
                     upper |= *(bits[hit1]);
@@ -6905,7 +6905,7 @@ float ibis::bin::undecidable(const ibis::qContinuousRange &expr,
         return ret;
 
     if (cand0+1 == hit0) { // a boundary bin
-        if (bits[cand0] == nullptr)
+        if (bits[cand0] == 0)
             activate(cand0);
         if (bits[cand0]) {
             iffy.copy(*(bits[cand0]));
@@ -6920,7 +6920,7 @@ float ibis::bin::undecidable(const ibis::qContinuousRange &expr,
     }
 
     if (hit1+1 == cand1 && hit1 < nobs) {
-        if (bits[hit1] == nullptr)
+        if (bits[hit1] == 0)
             activate(hit1);
         if (bits[hit1]) {
             iffy |= *(bits[hit1]);
@@ -8637,7 +8637,7 @@ void ibis::bin::estimate(const ibis::deprecatedJoin& expr,
     // Internally, upper stores the paires that can not be decided using
     // this index.  It is ORed with lower before exiting from this
     // function.
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8687,7 +8687,7 @@ void ibis::bin::estimate(const ibis::deprecatedJoin& expr,
     // Internally, upper stores the paires that can not be decided using
     // this index.  It is ORed with lower before exiting from this
     // function.
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(mask, lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8730,7 +8730,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
                          ibis::bitvector64& upper) const {
     lower.clear();
     upper.clear();
-    if (col == nullptr || idx2.col == nullptr) return; // nothing can be done
+    if (col == 0 || idx2.col == 0) return; // nothing can be done
 
     ibis::horometer timer;
     timer.start();
@@ -8739,7 +8739,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
     // Internally, upper stores the paires that can not be decided using
     // this index.  It is ORed with lower before exiting from this
     // function.
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(idx2, lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8783,7 +8783,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
                          ibis::bitvector64& upper) const {
     lower.clear();
     upper.clear();
-    if (col == nullptr || idx2.col == nullptr) return; // nothing can be done
+    if (col == 0 || idx2.col == 0) return; // nothing can be done
 
     ibis::horometer timer;
     timer.start();
@@ -8792,7 +8792,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
     // Internally, upper stores the paires that can not be decided using
     // this index.  It is ORed with lower before exiting from this
     // function.
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(idx2, mask, lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8843,7 +8843,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
         upper.clear();
         return;
     }
-    if (range1 == nullptr && range2 == nullptr) {
+    if (range1 == 0 && range2 == 0) {
         estimate(idx2, expr, mask, lower, upper);
         return;
     }
@@ -8851,7 +8851,7 @@ void ibis::bin::estimate(const ibis::bin& idx2,
     horometer timer;
     if (ibis::gVerbose > 1) 
         timer.start();
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(idx2, mask, range1, range2, lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8902,7 +8902,7 @@ int64_t ibis::bin::estimate(const ibis::bin& idx2,
     horometer timer;
     if (ibis::gVerbose > 1) 
         timer.start();
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         cnt = equiJoin(idx2, mask, range1, range2);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -8972,7 +8972,7 @@ void ibis::bin::estimate(const ibis::deprecatedJoin& expr,
         upper.clear();
         return;
     }
-    if (range1 == nullptr && range2 == nullptr) {
+    if (range1 == 0 && range2 == 0) {
         estimate(expr, mask, lower, upper);
         return;
     }
@@ -8980,7 +8980,7 @@ void ibis::bin::estimate(const ibis::deprecatedJoin& expr,
     horometer timer;
     if (ibis::gVerbose > 1) 
         timer.start();
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         equiJoin(mask, range1, range2, lower, upper);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -9030,7 +9030,7 @@ int64_t ibis::bin::estimate(const ibis::deprecatedJoin& expr,
     horometer timer;
     if (ibis::gVerbose > 1) 
         timer.start();
-    if (expr.getRange() == nullptr) {
+    if (expr.getRange() == 0) {
         cnt = equiJoin(mask, range1, range2);
     }
     else if (expr.getRange()->termType() == ibis::math::NUMBER) {
@@ -9533,7 +9533,7 @@ void ibis::bin::compJoin(const ibis::bin& idx2,
                          const ibis::math::term *expr,
                          ibis::bitvector64& sure,
                          ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
         const double delta = fabs(expr->eval());
@@ -9857,7 +9857,7 @@ void ibis::bin::compJoin(const ibis::math::term *expr,
                          const ibis::bitvector& mask,
                          ibis::bitvector64& sure,
                          ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
         const double delta = fabs(expr->eval());
@@ -9991,7 +9991,7 @@ void ibis::bin::equiJoin(const ibis::bitvector& mask,
         return;
     }
 
-    if (col == nullptr) return;
+    if (col == 0) return;
     uint32_t il1=0, il2=0, iu2=0;
     uint32_t ilc=0, iuc=0; // bits[ilc:iuc] is summed in cumu
     ibis::bitvector cumu, curr;
@@ -10046,8 +10046,8 @@ void ibis::bin::equiJoin(const ibis::bitvector& mask,
                 if (minval[il1] == maxval[il1] &&
                     minval[il1] == minval[il2] &&
                     minval[il1] == maxval[il2]) {
-                    if ((range1 == nullptr || range1->inRange(minval[il1])) &&
-                        (range2 == nullptr || range2->inRange(minval[il2]))) {
+                    if ((range1 == 0 || range1->inRange(minval[il1])) &&
+                        (range2 == 0 || range2->inRange(minval[il2]))) {
                         // exactly equal, record the pairs in @c sure
                         ibis::bitvector tmp(*(bits[il2]));
                         tmp &= mask;
@@ -10094,7 +10094,7 @@ void ibis::bin::deprecatedJoin(const double& delta,
                                const ibis::qRange* const range2,
                                ibis::bitvector64& sure,
                                ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (mask.cnt() == 0) {
         uint64_t np = mask.size();
         np *= np;
@@ -10252,7 +10252,7 @@ void ibis::bin::compJoin(const ibis::math::term *expr,
         iffy.clear();
         return;
     }
-    if (col == nullptr) return;
+    if (col == 0) return;
 
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
@@ -10395,7 +10395,7 @@ int64_t ibis::bin::equiJoin(const ibis::bitvector& mask,
     int64_t cnt = 0;
     if (mask.cnt() == 0)
         return cnt;
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
 
     uint32_t il1=0, il2=0, iu2=0;
     uint32_t ilc=0, iuc=0; // bits[ilc:iuc] is summed in cumu
@@ -10489,7 +10489,7 @@ int64_t ibis::bin::deprecatedJoin(const double& delta,
     if (delta <= 0.0) {
         return equiJoin(mask, range1, range2);
     }
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
 
     if (ibis::gVerbose > 3)
         ibis::util::logMessage
@@ -10582,7 +10582,7 @@ int64_t ibis::bin::compJoin(const ibis::math::term *expr,
     int64_t cnt = 0;
     if (mask.cnt() == 0)
         return cnt;
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
 
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
@@ -10704,7 +10704,7 @@ void ibis::bin::equiJoin(const ibis::bin& idx2,
                          const ibis::bitvector& mask,
                          ibis::bitvector64& sure,
                          ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (ibis::gVerbose > 3)
         ibis::util::logMessage
             ("bin::equiJoin", "start processing an equi-join "
@@ -10783,7 +10783,7 @@ void ibis::bin::deprecatedJoin(const ibis::bin& idx2,
                                const ibis::bitvector& mask,
                                ibis::bitvector64& sure,
                                ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (ibis::gVerbose > 3)
         ibis::util::logMessage
             ("bin::deprecatedJoin", "start processing a range-join ("
@@ -10906,7 +10906,7 @@ void ibis::bin::compJoin(const ibis::bin& idx2,
                          const ibis::bitvector& mask,
                          ibis::bitvector64& sure,
                          ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
         const double delta = fabs(expr->eval());
@@ -11034,7 +11034,7 @@ void ibis::bin::equiJoin(const ibis::bin& idx2,
                          const ibis::qRange* const range2,
                          ibis::bitvector64& sure,
                          ibis::bitvector64& iffy) const {
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (mask.cnt() == 0) {
         uint64_t np = mask.size();
         np *= np;
@@ -11104,8 +11104,8 @@ void ibis::bin::equiJoin(const ibis::bin& idx2,
             if (minval[il1] == maxval[il1] &&
                 minval[il1] == idx2.minval[il2] &&
                 minval[il1] == idx2.maxval[il2]) {
-                if ((range1 == nullptr || range1->inRange(minval[il1])) &&
-                    (range2 == nullptr || range2->inRange(minval[il1]))) {
+                if ((range1 == 0 || range1->inRange(minval[il1])) &&
+                    (range2 == 0 || range2->inRange(minval[il1]))) {
                     // exactly equal, record the pairs in @c sure
                     ibis::bitvector tmp(*(idx2.bits[il2]));
                     tmp &= mask;
@@ -11157,7 +11157,7 @@ void ibis::bin::deprecatedJoin(const ibis::bin& idx2,
         iffy.clear();
         return;
     }
-    if (col == nullptr) return;
+    if (col == 0) return;
     if (ibis::gVerbose > 3)
         ibis::util::logMessage
             ("bin::deprecatedJoin", "start processing a range-join ("
@@ -11316,7 +11316,7 @@ void ibis::bin::compJoin(const ibis::bin& idx2,
         iffy.clear();
         return;
     }
-    if (col == nullptr) return;
+    if (col == 0) return;
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
         const double delta = fabs(expr->eval());
@@ -11466,7 +11466,7 @@ int64_t ibis::bin::equiJoin(const ibis::bin& idx2,
     if (mask.cnt() == 0) {
         return cnt;
     }
-    if (col == nullptr || idx2.col == nullptr) return -1;
+    if (col == 0 || idx2.col == 0) return -1;
 
     if (ibis::gVerbose > 3)
         ibis::util::logMessage
@@ -11565,7 +11565,7 @@ int64_t ibis::bin::deprecatedJoin(const ibis::bin& idx2,
     if (mask.cnt() == 0) {
         return cnt;
     }
-    if (col == nullptr) return -1;
+    if (col == 0) return -1;
     if (delta <= 0.0)
         return equiJoin(idx2, mask, range1, range2);
     if (ibis::gVerbose > 3)
@@ -11673,7 +11673,7 @@ int64_t ibis::bin::compJoin(const ibis::bin& idx2,
     if (mask.cnt() == 0) {
         return cnt;
     }
-    if (col == nullptr || idx2.col == nullptr) return -1;
+    if (col == 0 || idx2.col == 0) return -1;
 
     ibis::index::barrel bar(const_cast<const ibis::math::term*>(expr));
     if (bar.size() == 0) {
@@ -12108,7 +12108,7 @@ long ibis::bin::mergeValues(const ibis::qContinuousRange& cmp,
 /// @note This function only works with integers and floating-point values.
 long ibis::bin::select(const ibis::qContinuousRange& cmp, void* vals) const {
     long ierr = -1;
-    if (col == nullptr) return ierr;
+    if (col == 0) return ierr;
     switch (col->type()) {
     case ibis::BYTE:
         ierr = mergeValues(cmp, *static_cast<array_t<signed char>*>(vals));
@@ -12155,7 +12155,7 @@ long ibis::bin::select(const ibis::qContinuousRange& cmp, void* vals) const {
 long ibis::bin::select(const ibis::qContinuousRange& cmp, void* vals,
                        ibis::bitvector& hits) const {
     long ierr = -1;
-    if (col == nullptr) return ierr;
+    if (col == 0) return ierr;
 
     std::string iname, bname;
     dataFileName(iname);

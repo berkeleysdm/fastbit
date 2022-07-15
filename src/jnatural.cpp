@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2008-2016 the Regents of the University of California
+// Copyright (c) 2008-2022 the Regents of the University of California
 #include "jnatural.h"   // ibis::jNatural
 #include "tab.h"        // ibis::tabula
 #include "bord.h"       // ibis::bord, ibis::table::bufferArray
@@ -1350,7 +1350,7 @@ ibis::table* ibis::jNatural::select(const char* sstr) const {
         std::unique_ptr<ibis::table> 
             res2(static_cast<const ibis::bord*>(res1.get())->evaluateTerms
                  (sel, desc_.c_str()));
-        if (res2.get() != nullptr) {
+        if (res2.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jNatural::select(" << sstr << ", " << desc_
@@ -1369,7 +1369,7 @@ ibis::table* ibis::jNatural::select(const char* sstr) const {
 
     if ((features & 2) != 0) { // aggregation operations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->groupby(sel));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jNatural::select(" << sstr << ", " << desc_
@@ -1443,7 +1443,7 @@ ibis::table* ibis::jNatural::select() const {
     if ((features & 1) != 0) { // arithmetic computations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->evaluateTerms
                    (*sel_, desc_.c_str()));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jNatural::select(" << *sel_ << ", " << desc_
@@ -1461,7 +1461,7 @@ ibis::table* ibis::jNatural::select() const {
 
     if ((features & 2) != 0) { // aggregation operations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->groupby(*sel_));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jNatural::select(" << *sel_ << ", " << desc_

@@ -1,6 +1,6 @@
 //File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2000-2020 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 //
 // This file contains implementation of the functions defined in column.h
 //

@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2010-2016 the Regents of the University of California
+// Copyright (c) 2010-2022 the Regents of the University of California
 #include "jnatural.h"   // ibis::jNatural
 #include "jrange.h"     // ibis::jRange
 #include "filter.h"     // ibis::filter
@@ -159,7 +159,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                     ierr = ibis::whereClause::verifyExpr
                         (ttl[j].term, *partr, &sc);
                     if (ierr == 0) { // definitely for partr
-                        if (condr.get() != nullptr) {
+                        if (condr.get() != 0) {
                             ibis::qExpr *tmp =
                                 new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                             tmp->setLeft(condr.release());
@@ -174,7 +174,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                         ierr = ibis::whereClause::verifyExpr
                             (ttl[j].term, *parts, &sc);
                         if (ierr == 0) {
-                            if (conds.get() != nullptr) {
+                            if (conds.get() != 0) {
                                 ibis::qExpr *tmp =
                                     new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                                 tmp->setLeft(conds.release());
@@ -198,7 +198,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                     pit = ttl[j].tnames.begin();
                     if (stricmp(pit->c_str(), pr) == 0 ||
                              stricmp(pit->c_str(), rpr) == 0) {
-                        if (condr.get() != nullptr) {
+                        if (condr.get() != 0) {
                             ibis::qExpr *tmp =
                                 new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                             tmp->setLeft(condr.release());
@@ -211,7 +211,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                     }
                     else if (stricmp(pit->c_str(), ps) == 0 ||
                              stricmp(pit->c_str(), rps) == 0) {
-                        if (conds.get() != nullptr) {
+                        if (conds.get() != 0) {
                             ibis::qExpr *tmp =
                                 new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                             tmp->setLeft(conds.release());
@@ -246,7 +246,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
 
                     if (tps == 0 || *tps == 0) {
                         if (stricmp(tpr, pr) == 0 || stricmp(tpr, rpr) == 0) {
-                            if (condr.get() != nullptr) {
+                            if (condr.get() != 0) {
                                 ibis::qExpr *tmp =
                                     new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                                 tmp->setLeft(condr.release());
@@ -259,7 +259,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                         }
                         else if (pr == ps || stricmp(tpr, ps) == 0 ||
                                  stricmp(tpr, rps) == 0) {
-                            if (conds.get() != nullptr) {
+                            if (conds.get() != 0) {
                                 ibis::qExpr *tmp =
                                     new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                                 tmp->setLeft(conds.release());
@@ -287,7 +287,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
                                stricmp(tpr, rps) == 0) &&
                               (stricmp(tps, pr) == 0 ||
                                stricmp(tps, rpr) == 0))) {
-                        if (condj.get() != nullptr) {
+                        if (condj.get() != 0) {
                             ibis::qExpr *tmp =
                                 new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                             tmp->setLeft(condj.release());
@@ -319,7 +319,7 @@ ibis::quaere::create(const char* sel, const char* fr, const char* wh,
             } // for (j ...
 
             if (fc.getJoinCondition() != 0) {
-                if (condj.get() != nullptr) {
+                if (condj.get() != 0) {
                     ibis::qExpr *tmp =
                         new ibis::qExpr(ibis::qExpr::LOGICAL_AND);
                     tmp->setLeft(condj.release());

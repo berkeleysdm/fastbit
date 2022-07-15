@@ -1,7 +1,7 @@
 /* $Id$ -*- mode: c++ -*- */
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2009-2016 the Regents of the University of California
+// Copyright (c) 2009-2022 the Regents of the University of California
 
 %code top {
 /** \file Defines the parser for the from clause accepted by FastBit
@@ -14,14 +14,14 @@
 }
 
 /* bison declarations */
-%require "3.0"
+%require "2.7"
 %debug
-%define parse.error verbose
+%error-verbose
  /*%start START*/
 %defines
 %skeleton "lalr1.cc"
 %define api.namespace {ibis}
-%define api.parser.class {fromParser}
+%define parser_class_name {fromParser}
 %locations
      /*%expect 1*/
 %initial-action

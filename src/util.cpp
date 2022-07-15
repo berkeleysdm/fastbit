@@ -1,5 +1,5 @@
 // $Id$
-// Copyright (c) 2000-2020 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
 //

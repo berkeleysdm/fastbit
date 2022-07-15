@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at acm.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2020 the Regents of the University of California
+// Copyright (c) 2000-2022 the Regents of the University of California
 #ifndef IBIS_UTIL_H
 #define IBIS_UTIL_H
 ///@file

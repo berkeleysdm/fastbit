@@ -1,6 +1,6 @@
 // File $Id$    
 // author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2022 the Regents of the University of California
 //
 #if defined(_WIN32) && defined(_MSC_VER)
 #pragma warning(disable:4786)   // some identifier longer than 256 characters
@@ -349,8 +349,10 @@ ibis::table* ibis::filter::select() const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a bad_alloc ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -359,8 +361,10 @@ ibis::table* ibis::filter::select() const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a std::exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -369,8 +373,10 @@ ibis::table* ibis::filter::select() const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a string exception ("
                  << s << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -379,8 +385,10 @@ ibis::table* ibis::filter::select() const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed an unknown exception, "
                 "will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -430,8 +438,10 @@ ibis::table* ibis::filter::select(const char* sstr) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a bad_alloc ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -440,8 +450,10 @@ ibis::table* ibis::filter::select(const char* sstr) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a std::exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -450,8 +462,10 @@ ibis::table* ibis::filter::select(const char* sstr) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a string exception ("
                  << s << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -460,8 +474,10 @@ ibis::table* ibis::filter::select(const char* sstr) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed an unknown exception, "
                 "will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -512,8 +528,10 @@ ibis::filter::select(const ibis::table::stringArray& colnames) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a bad_alloc ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -522,8 +540,10 @@ ibis::filter::select(const ibis::table::stringArray& colnames) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a std::exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -532,8 +552,10 @@ ibis::filter::select(const ibis::table::stringArray& colnames) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed a string exception ("
                  << s << "), will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -542,8 +564,10 @@ ibis::filter::select(const ibis::table::stringArray& colnames) const {
             ibis::util::logger lg;
             lg() << "Warning -- filter::select absorbed an unknown exception, "
                 "will return a nil pointer";
-            if (ibis::gVerbose > 1)
+            if (ibis::gVerbose > 2) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -668,7 +692,7 @@ ibis::table* ibis::filter::sift0(const ibis::selectClause  &tms,
     }
 
     if (brd1.get() == 0) return 0;
-    if (ibis::gVerbose > 2 && brd1.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd1.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " created an in-memory data partition with "
              << brd1->nRows() << " row" << (brd1->nRows()>1?"s":"")
@@ -702,7 +726,7 @@ ibis::table* ibis::filter::sift0(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(brd1->groupby(tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -891,13 +915,13 @@ ibis::table* ibis::filter::sift0S(const ibis::selectClause  &tms,
     // [mergesFirst..mergesLast] only.
     // Walk from smaller to larger accumulators.
     for (unsigned j = mergesFirst; j <= mergesLast; ++j) {
-        if (merges[j].get() != nullptr) {
+        if (merges[j].get() != 0) {
             // the smallest accumulator found, let's use it as base one
             brd0 = std::move(merges[j]);
             // process all the other accumulators, until we reach the end
             while (++j <= mergesLast) {
                 // the slot may not be used, let's check
-                if (merges[j].get() != nullptr) {
+                if (merges[j].get() != 0) {
                     // slot is used, so merge it with the result
                     ierr = merges[j]->merge(*brd0, tms);
                     if (ierr < 0) {
@@ -917,7 +941,7 @@ ibis::table* ibis::filter::sift0S(const ibis::selectClause  &tms,
 
     if (brd0.get() == 0) // no answer
         return new ibis::tabula(tn.c_str(), mesg.c_str(), 0);
-    if (ibis::gVerbose > 2 && brd0.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd0.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " completed per partition aggregation to produce "
              << brd0->nRows() << " row" << (brd0->nRows()>1?"s":"")
@@ -951,10 +975,10 @@ ibis::table* ibis::filter::sift0S(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(ibis::bord::groupbyc(*brd0, tms));
-    // if (brd2.get() != nullptr)
+    // if (brd2.get() != 0)
     //  static_cast<ibis::bord*>(brd2.get())
     //      ->restoreCategoriesAsStrings(*plist.front());
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -1064,7 +1088,7 @@ ibis::table* ibis::filter::sift1(const ibis::selectClause  &tms,
     }
 
     if (brd1.get() == 0) return 0;
-    if (ibis::gVerbose > 2 && brd1.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd1.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " created an in-memory data partition with "
              << brd1->nRows() << " row" << (brd1->nRows()>1?"s":"")
@@ -1097,7 +1121,7 @@ ibis::table* ibis::filter::sift1(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(brd1->groupby(tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -1281,13 +1305,13 @@ ibis::table* ibis::filter::sift1S(const ibis::selectClause  &tms,
     // [mergesFirst..mergesLast] only.
     // Walk from smaller to larger accumulators.
     for (unsigned j = mergesFirst; j <= mergesLast; ++j) {
-        if (merges[j].get() != nullptr) {
+        if (merges[j].get() != 0) {
             // the smallest accumulator found, let's use it as base one
             brd0 = std::move(merges[j]);
             // process all the other accumulators, until we reach the end
             while (++j <= mergesLast) {
                 // the slot may not be used, let's check
-                if (merges[j].get() != nullptr) {
+                if (merges[j].get() != 0) {
                     // slot is used, so merge it with the result
                     ierr = merges[j]->merge(*brd0, tms);
                     if (ierr < 0) {
@@ -1340,7 +1364,7 @@ ibis::table* ibis::filter::sift1S(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(ibis::bord::groupbyc(*(brd0.get()), tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -1527,7 +1551,7 @@ ibis::table* ibis::filter::sift2(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(brd1->groupby(tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -1634,7 +1658,7 @@ ibis::table* ibis::filter::sift2(const ibis::selectClause  &tms,
     }
 
     if (brd1.get() == 0) return 0;
-    if (ibis::gVerbose > 2 && brd1.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd1.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " creates an in-memory data partition with "
              << brd1->nRows() << " row" << (brd1->nRows()>1?"s":"")
@@ -1667,7 +1691,7 @@ ibis::table* ibis::filter::sift2(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(brd1->groupby(tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produces an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -1823,7 +1847,7 @@ ibis::table* ibis::filter::sift2(const ibis::selectClause        &tms,
     }
 
     if (brd1.get() == 0) return 0;
-    if (ibis::gVerbose > 2 && brd1.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd1.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " creates an in-memory data partition with "
              << brd1->nRows() << " row" << (brd1->nRows()>1?"s":"")
@@ -1856,7 +1880,7 @@ ibis::table* ibis::filter::sift2(const ibis::selectClause        &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(brd1->groupby(tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produces an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -2075,13 +2099,13 @@ ibis::table* ibis::filter::sift2S(const ibis::selectClause  &tms,
     // [mergesFirst..mergesLast] only.
     // Walk from smaller to larger accumulators.
     for (unsigned j = mergesFirst; j <= mergesLast; ++j) {
-        if (merges[j].get() != nullptr) {
+        if (merges[j].get() != 0) {
             // the smallest accumulator found, let's use it as base one
             brd0 = std::move(merges[j]);
             // process all the other accumulators, until we reach the end
             while (++j <= mergesLast) {
                 // the slot may not be used, let's check
-                if (merges[j].get() != nullptr) {
+                if (merges[j].get() != 0) {
                     // slot is used, so merge it with the result
                     ierr = merges[j]->merge(*brd0, tms);
                     if (ierr < 0) {
@@ -2134,7 +2158,7 @@ ibis::table* ibis::filter::sift2S(const ibis::selectClause  &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(ibis::bord::groupbyc(*(brd0.get()), tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produced an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -2310,13 +2334,13 @@ ibis::table* ibis::filter::sift2S
     // [mergesFirst..mergesLast] only.
     // Walk from smaller to larger accumulators.
     for (unsigned j = mergesFirst; j <= mergesLast; ++j) {
-        if (merges[j].get() != nullptr) {
+        if (merges[j].get() != 0) {
             // the smallest accumulator found, let's use it as base one
             brd0 = std::move(merges[j]);
             // process all the other accumulators, until we reach the end
             while (++j <= mergesLast) {
                 // the slot may not be used, let's check
-                if (merges[j].get() != nullptr) {
+                if (merges[j].get() != 0) {
                     // slot is used, so merge it with the result
                     ierr = merges[j]->merge(*brd0, tms);
                     if (ierr < 0) {
@@ -2369,7 +2393,7 @@ ibis::table* ibis::filter::sift2S
     }
 
     std::unique_ptr<ibis::table> brd2(ibis::bord::groupbyc(*(brd0.get()), tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produces an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -2602,13 +2626,13 @@ ibis::table* ibis::filter::sift2S(const ibis::selectClause        &tms,
     // [mergesFirst..mergesLast] only.
     // Walk from smaller to larger accumulators.
     for (unsigned j = mergesFirst; j <= mergesLast; ++j) {
-        if (merges[j].get() != nullptr) {
+        if (merges[j].get() != 0) {
             // the smallest accumulator found, let's use it as base one
             brd0 = std::move(merges[j]);
             // process all the other accumulators, until we reach the end
             while (++j <= mergesLast) {
                 // the slot may not be used, let's check
-                if (merges[j].get() != nullptr) {
+                if (merges[j].get() != 0) {
                     // slot is used, so merge it with the result
                     ierr = merges[j]->merge(*brd0, tms);
                     if (ierr < 0) {
@@ -2661,7 +2685,7 @@ ibis::table* ibis::filter::sift2S(const ibis::selectClause        &tms,
     }
 
     std::unique_ptr<ibis::table> brd2(ibis::bord::groupbyc(*(brd0.get()), tms));
-    if (ibis::gVerbose > 2 && brd2.get() != nullptr) {
+    if (ibis::gVerbose > 2 && brd2.get() != 0) {
         ibis::util::logger lg;
         lg() << mesg << " produces an in-memory data partition with "
              << brd2->nRows() << " row" << (brd2->nRows()>1?"s":"")
@@ -2708,8 +2732,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& mylist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed a bad_alloc exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2718,8 +2744,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& mylist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed a std::exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2728,8 +2756,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& mylist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed a string exception ("
                  << s << "), will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2738,8 +2768,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& mylist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed an unknown exception, "
                 "will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2790,8 +2822,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& plist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed a std::exception ("
                  << e.what() << "), will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2800,8 +2834,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& plist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed a string exception ("
                  << s << "), will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }
@@ -2810,8 +2846,10 @@ ibis::table* ibis::table::select(const ibis::constPartList& plist,
             ibis::util::logger lg;
             lg() << "Warning -- table::select absorbed an unknown exception, "
                 "will return a nil pointer";
-            if (ibis::gVerbose > 3)
+            if (ibis::gVerbose > 3) {
+                lg() << "\n";
                 ibis::fileManager::instance().printStatus(lg());
+            }
         }
         ibis::util::emptyCache();
     }

@@ -1,7 +1,7 @@
 /* $Id$ -*- mode: c++ -*- */
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2022 the Regents of the University of California
 
 %code top {
 /** \file Defines the parser for the where clause accepted by FastBit IBIS.
@@ -16,15 +16,14 @@
 }
 
 /* bison declarations */
-%require "3.0"
+%require "2.7"
 %debug
-%expect 2
-%define parse.error verbose
+%error-verbose
 %start START
 %defines
 %skeleton "lalr1.cc"
 %define api.namespace {ibis}
-%define api.parser.class {whereParser}
+%define parser_class_name {whereParser}
 %locations
      /*%expect 1*/
 %initial-action
@@ -76,8 +75,8 @@
 %token <integerVal> DIVOP	"/"
 %token <integerVal> REMOP	"%"
 %token <integerVal> EXPOP	"**"
-%token <int64Val>   INT64	"(64-bit) integer value"
-%token <uint64Val>  UINT64	"unsigned (64-bit) integer value"
+%token <int64Val>   INT64	"integer value"
+%token <uint64Val>  UINT64	"unsigned integer value"
 %token <doubleVal>  NUMBER	"floating-point number"
 %token <stringVal>  INTSEQ	"signed integer sequence"
 %token <stringVal>  UINTSEQ	"unsigned integer sequence"

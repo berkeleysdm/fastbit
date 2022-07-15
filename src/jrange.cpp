@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2010-2016 the Regents of the University of California
+// Copyright (c) 2010-2022 the Regents of the University of California
 #include "jrange.h"
 #include "tab.h"        // ibis::tabula
 #include "bord.h"       // ibis::bord, ibis::table::bufferArray
@@ -415,7 +415,7 @@ ibis::table* ibis::jRange::select() const {
     if ((features & 1) != 0) { // arithmetic computations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->evaluateTerms
                    (*sel_, desc_.c_str()));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jRange::select(" << *sel_ << ", " << desc_
@@ -433,7 +433,7 @@ ibis::table* ibis::jRange::select() const {
 
     if ((features & 2) != 0) { // aggregation operations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->groupby(*sel_));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jRange::select(" << *sel_ << ", " << desc_
@@ -507,7 +507,7 @@ ibis::table* ibis::jRange::select(const char *sstr) const {
     if ((features & 1) != 0) { // arithmetic computations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->evaluateTerms
                    (sel, desc_.c_str()));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jRange::select(" << sel << ", " << desc_
@@ -525,7 +525,7 @@ ibis::table* ibis::jRange::select(const char *sstr) const {
 
     if ((features & 2) != 0) { // aggregation operations
         res1.reset(static_cast<const ibis::bord*>(res1.get())->groupby(sel));
-        if (res1.get() != nullptr) {
+        if (res1.get() != 0) {
             if (ibis::gVerbose > 2) {
                 ibis::util::logger lg;
                 lg() << "jRange::select(" << *sel_ << ", " << desc_

@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2022 the Regents of the University of California
 #ifndef IBIS_TABLE_H
 #define IBIS_TABLE_H
 /**@file
@@ -188,9 +188,10 @@ public:
     /// specified in the list of column names.  This function is not
     /// designated @c const even though it does not change the content
     /// in SQL logic, but it may change internal representations.
+    ///
     /// @note If an empty list is passed to this function, it will reorder
-    /// rows using all columns with the column having the smallest number
-    /// of distinct values first.
+    /// rows using all integral values with the column having the smallest
+    /// number of distinct values first.
     virtual void orderby(const stringArray&)=0;
     virtual void orderby(const stringArray&, const std::vector<bool>&)=0;
     /// Reorder the rows.  The column names are separated by commas.

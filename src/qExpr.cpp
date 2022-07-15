@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 1998-2020 the Regents of the University of California
+// Copyright (c) 1998-2022 the Regents of the University of California
 //
 // implement the functions defined in qExpr.h
 //

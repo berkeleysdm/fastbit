@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2020 the Regents of the University of California
+// Copyright (c) 2007-2022 the Regents of the University of California
 #include "part.h"
 #include "qExpr.h"
 #include "selectLexer.h"
