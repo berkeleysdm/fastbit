@@ -32,8 +32,8 @@
 /// The default constructor.  It constructs an empty array.
 template<class T>
 ibis::array_t<T>::array_t()
-    : actual(new ibis::fileManager::storage), m_begin(0), m_end(0) {
-    if (actual != 0) {
+    : actual(new ibis::fileManager::storage), m_begin(nullptr), m_end(nullptr) {
+    if (actual != nullptr) {
         m_begin = reinterpret_cast<T*>(actual->begin());
         m_end   = m_begin;
         actual->beginUse();
@@ -56,8 +56,8 @@ ibis::array_t<T>::array_t()
 template<class T>
 ibis::array_t<T>::array_t(size_t n)
     : actual(new ibis::fileManager::storage(n*sizeof(T))),
-      m_begin(0), m_end(0) {
-    if (actual != 0) {
+      m_begin(nullptr), m_end(nullptr) {
+    if (actual != nullptr) {
         m_begin = reinterpret_cast<T*>(actual->begin());
         m_end   = m_begin + n;
         actual->beginUse();
@@ -82,8 +82,8 @@ ibis::array_t<T>::array_t(size_t n)
 template<class T>
 ibis::array_t<T>::array_t(size_t n, const T& val)
     : actual(new ibis::fileManager::storage(n*sizeof(T))),
-      m_begin(0), m_end(0){
-    if (actual != 0) {
+      m_begin(nullptr), m_end(nullptr){
+    if (actual != nullptr) {
         m_begin = reinterpret_cast<T*>(actual->begin());
         m_end   = m_begin + n;
         actual->beginUse();
@@ -112,8 +112,8 @@ ibis::array_t<T>::array_t(size_t n, const T& val)
 template<class T>
 ibis::array_t<T>::array_t(const std::vector<T>& rhs)
     : actual(new ibis::fileManager::storage(rhs.size()*sizeof(T))),
-      m_begin(0), m_end(0) {
-    if (actual != 0) {
+      m_begin(nullptr), m_end(nullptr) {
+    if (actual != nullptr) {
         actual->beginUse();
         m_begin = reinterpret_cast<T*>(actual->begin());
         m_end   = m_begin + rhs.size();
@@ -133,7 +133,7 @@ ibis::array_t<T>::array_t(const std::vector<T>& rhs)
 template<class T>
 ibis::array_t<T>::array_t(const array_t<T>& rhs)
     : actual(rhs.actual), m_begin(rhs.m_begin), m_end(rhs.m_end) {
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
 
     LOGGER(ibis::gVerbose > 9)
@@ -156,7 +156,7 @@ ibis::array_t<T>::array_t(const array_t<T>& rhs, const size_t begin,
                           const size_t end)
     : actual(rhs.actual), m_begin(rhs.m_begin+begin), m_end(rhs.m_begin+end) {
 #if defined(DEBUG) || defined(_DEBUG)
-    LOGGER(end < begin && end != 0 && ibis::gVerbose > 0)
+    LOGGER((end < begin || end == nullptr) && ibis::gVerbose > 0)
         << "Warning -- array_t<" << typeid(T).name()
         << "> called with a suspicious looking section [" << begin
         << ", " << end << ')';
@@ -165,7 +165,7 @@ ibis::array_t<T>::array_t(const array_t<T>& rhs, const size_t begin,
         m_begin = rhs.m_end;
     if (m_end > rhs.m_end || m_end < m_begin)
         m_end = rhs.m_end;
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
 
     LOGGER(ibis::gVerbose > 9)
@@ -183,9 +183,8 @@ ibis::array_t<T>::array_t(const array_t<T>& rhs, const size_t begin,
 template<class T>
 ibis::array_t<T>::array_t(ibis::fileManager::storage* rhs)
     : actual(rhs), m_begin((T*)(rhs->begin())), m_end((T*)(rhs->end())) {
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
-    difference_type diff = m_end - m_begin;
 
     LOGGER(ibis::gVerbose > 9)
         << "array_t<" << typeid(T).name() << "> constructed at "
@@ -205,15 +204,15 @@ template<class T>
 ibis::array_t<T>::array_t(ibis::fileManager::storage* rhs,
                           const size_t start, const size_t end)
     : actual(rhs),
-      m_begin((T*)(rhs != 0 ? rhs->begin()+start : 0)),
-      m_end((T*)(rhs != 0 ? rhs->begin()+end : 0)) {
+      m_begin((T*)(!rhs ? rhs->begin()+start : nullptr)),
+      m_end((T*)(!rhs ? rhs->begin()+end : nullptr)) {
 #if defined(DEBUG) || defined(_DEBUG)
-    LOGGER(end < start && end != 0 && ibis::gVerbose > 0)
+    LOGGER((end < start || end == nullptr) && ibis::gVerbose > 0)
         << "Warning -- array_t<" << typeid(T).name()
         << "> called with a suspicious looking section [" << start
         << ", " << end << ')';
 #endif
-    if (actual != 0 && m_begin != 0 && m_end != 0) {
+    if (actual != nullptr && m_begin != nullptr && m_end != nullptr) {
         if ((const char*)(m_begin) > rhs->end()) {
             LOGGER(ibis::gVerbose > 0)
                 << "Warning -- the constructor of array_t<" << typeid(T).name()
@@ -243,15 +242,15 @@ ibis::array_t<T>::array_t(ibis::fileManager::storage* rhs,
 template<class T>
 ibis::array_t<T>::array_t(const int fdes, const off_t begin, const off_t end)
     : actual(new ibis::fileManager::storage(fdes, begin, end)),
-      m_begin((T*) (actual != 0 ? actual->begin() : 0)),
-      m_end((T*) (actual != 0 ? actual->end() : 0)) {
+      m_begin((T*) (actual != nullptr ? actual->begin() : nullptr)),
+      m_end((T*) (actual != nullptr ? actual->end() : nullptr)) {
 #if defined(DEBUG) || defined(_DEBUG)
-    LOGGER(end < begin && end != 0 && ibis::gVerbose > 0)
+    LOGGER((end < begin || end == nullptr) && ibis::gVerbose > 0)
         << "Warning -- array_t<" << typeid(T).name()
         << "> called with a suspicious looking section [" << begin
         << ", " << end << ')';
 #endif
-    if (m_begin == 0 || m_begin + (end - begin)/sizeof(T) != m_end) {
+    if (m_begin == nullptr || m_begin + (end - begin)/sizeof(T) != m_end) {
         delete actual;
         LOGGER(ibis::gVerbose >= 0)
             << "Warning -- array_t<" << typeid(T).name() << "> failed to read "
@@ -260,7 +259,7 @@ ibis::array_t<T>::array_t(const int fdes, const off_t begin, const off_t end)
         throw ibis::bad_alloc("array_t failed to read file segment"
                               IBIS_FILE_LINE);
     }
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
 
     LOGGER(ibis::gVerbose > 9)
@@ -277,7 +276,7 @@ ibis::array_t<T>::array_t(const char *fn, const off_t begin, const off_t end)
     : actual(new ibis::fileManager::storage(fn, begin, end)),
       m_begin(actual ? (T*) actual->begin() : (T*)0),
       m_end(actual ? (T*) actual->end() : (T*)0) {
-    if (m_begin == 0 || m_begin + (end - begin)/sizeof(T) != m_end) {
+    if (m_begin == nullptr || m_begin + (end - begin)/sizeof(T) != m_end) {
         delete actual;
         LOGGER(ibis::gVerbose >= 0)
             << "Warning -- array_t<" << typeid(T).name() << "> failed to read "
@@ -286,7 +285,7 @@ ibis::array_t<T>::array_t(const char *fn, const off_t begin, const off_t end)
         throw ibis::bad_alloc("array_t failed to read file segment"
                               IBIS_FILE_LINE);
     }
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
     LOGGER(ibis::gVerbose > 9)
         << "array_t<" << typeid(T).name() << "> constructed at "
@@ -304,7 +303,7 @@ ibis::array_t<T>::array_t(const char *fn, const int fdes,
     : actual(ibis::fileManager::getFileSegment(fn, fdes, begin, end)),
       m_begin(actual ? (T*) actual->begin() : (T*)0),
       m_end(actual ? (T*) actual->end() : (T*)0) {
-    if (m_begin == 0 || m_begin + (end - begin)/sizeof(T) != m_end) {
+    if (m_begin == nullptr || m_begin + (end - begin)/sizeof(T) != m_end) {
         delete actual;
         LOGGER(ibis::gVerbose >= 0)
             << "Warning -- array_t<" << typeid(T).name() << "> failed to read "
@@ -313,7 +312,7 @@ ibis::array_t<T>::array_t(const char *fn, const int fdes,
         throw ibis::bad_alloc("array_t failed to read file segment"
                               IBIS_FILE_LINE);
     }
-    if (actual != 0)
+    if (actual != nullptr)
         actual->beginUse();
     LOGGER(ibis::gVerbose > 9)
         << "array_t<" << typeid(T).name() << "> constructed at "
@@ -335,7 +334,7 @@ ibis::array_t<T>::array_t(const char *fn, const int fdes,
 /// caller needs to free the memory after use.
 template <class T>
 ibis::array_t<T>::array_t(T *addr, size_t nelm)
-    : actual(0), m_begin(addr), m_end(addr+nelm) {
+    : actual(nullptr), m_begin(addr), m_end(addr+nelm) {
     LOGGER(ibis::gVerbose > 9)
         << "array_t<" << typeid(T).name() << "> constructed at "
         << static_cast<void*>(this) << " with actual="
@@ -380,8 +379,8 @@ void ibis::array_t<T>::copy(const array_t<T>& rhs) {
 /// resulting in an empty array.
 template<class T> 
 void ibis::array_t<T>::deepCopy(const array_t<T>& rhs) {
-    if (rhs.m_begin != 0 && rhs.m_end != 0) { // valid rhs
-        if (actual != 0 && actual->inUse() < 2U &&
+    if (!rhs.m_begin && !rhs.m_end) { // valid rhs
+        if (actual != nullptr && actual->inUse() < 2U &&
             actual->end() >= rhs.size() * sizeof(T) + actual->begin()) {
             // already has enough memory allocated, stay with it
             const size_t n = rhs.size();
@@ -421,9 +420,9 @@ void ibis::array_t<T>::deepCopy(const array_t<T>& rhs) {
 /// array.
 template<class T>
 void ibis::array_t<T>::nosharing() {
-    if (m_begin != 0 && m_end >= m_begin) { // a well-formed object
-        if (actual == 0 || m_begin != (T*)actual->begin() ||
-            actual->filename() != 0 || actual->inUse() > 1) {
+    if (m_begin != nullptr && m_end >= m_begin) { // a well-formed object
+        if (actual == nullptr || m_begin != (T*)actual->begin() ||
+            actual->filename() != nullptr || actual->inUse() > 1) {
             // copy-and-swap
             std::unique_ptr<ibis::fileManager::storage>
                 tmp(new ibis::fileManager::storage
@@ -453,7 +452,7 @@ void ibis::array_t<T>::nosharing() {
 /// Free the memory associated with the fileManager::storage.
 template<class T>
 void ibis::array_t<T>::freeMemory() {
-    if (actual != 0) {
+    if (actual != nullptr) {
         actual->endUse();
         LOGGER(ibis::gVerbose > 9)
             << "array_t<" << typeid(T).name()
@@ -466,10 +465,10 @@ void ibis::array_t<T>::freeMemory() {
         if (0 == actual->filename() && 0 == actual->inUse()) {
             delete actual;
         }
-        actual = 0;
+        actual = nullptr;
     }
-    m_begin = 0;
-    m_end = 0;
+    m_begin = nullptr;
+    m_end = nullptr;
 } // ibis::array_t<T>::freeMemory
 
 /// Find the position of the first element that is no less than @c val.
@@ -1476,11 +1475,11 @@ void ibis::array_t<T>::resize(size_t n) {
         return;
     }
 
-    if (actual == 0 || m_begin == 0 || m_end < m_begin ||
+    if (actual == nullptr || m_begin == nullptr || m_end < m_begin ||
         (const T*)actual->end() < m_begin + n)
         reserve(n);
 
-    if (actual == 0 || (const T*)actual->end() < m_begin + n) {
+    if (actual == nullptr || (const T*)actual->end() < m_begin + n) {
         LOGGER(ibis::gVerbose > 0)
             << "Warning -- array_t::resize(" << n << ") failed to allocate "
             " sufficient space";
@@ -1517,16 +1516,16 @@ void ibis::array_t<T>::reserve(size_t n) {
     }
 
     size_t n0 = 0;
-    if (actual != 0)
+    if (actual != nullptr)
         n0 = (reinterpret_cast<T const *>(actual->end()) - m_begin);
-    if (m_begin != 0 && m_end >= m_begin) { // a valid existing array
-        if (n > n0 || (actual != 0 && actual->filename() != 0)) {
+    if (m_begin != nullptr && m_end >= m_begin) { // a valid existing array
+        if (n > n0 || (actual != nullptr && actual->filename() != nullptr)) {
             // attempt to allocate new storage space
             n0 = (m_end-m_begin);
             if (n < n0) n = n0;
             std::unique_ptr<ibis::fileManager::storage>
                 tmp(new ibis::fileManager::storage(n*sizeof(T)));
-            if (tmp.get() != 0) { // copy and swap
+            if (tmp.get() != nullptr) { // copy and swap
                 (void) memcpy(tmp->begin(), m_begin, n0*sizeof(T));
                 if (n > n0)
                     memset(tmp->begin()+n0*sizeof(T), 0, (n-n0)*sizeof(T));
@@ -1559,11 +1558,11 @@ void ibis::array_t<T>::reserve(size_t n) {
 template<class T>
 T* ibis::array_t<T>::release() {
     nosharing();
-    T* ret = (actual != 0 ? static_cast<T*>(actual->release())
-              : static_cast<T*>(0));
-    if (ret != 0) {
-        m_begin = 0;
-        m_end = 0;
+    T* ret = (actual != nullptr ? static_cast<T*>(actual->release())
+              : static_cast<T*>(nullptr));
+    if (!ret) {
+        m_begin = nullptr;
+        m_end = nullptr;
     }
     return ret;
 } // ibis::array_t<T>::release
@@ -1589,7 +1588,7 @@ ibis::array_t<T>::insert(typename ibis::array_t<T>::iterator p, const T& val) {
         throw "array_t must have less than 2^31 elements" IBIS_FILE_LINE;
     }
 
-    if (actual != 0 && actual->filename() == 0 &&
+    if (actual != nullptr && actual->filename() == nullptr &&
         (const T*)actual->end() > m_end) {
         // use the existing space
         iterator i = m_end;
@@ -1624,12 +1623,12 @@ ibis::array_t<T>::insert(typename ibis::array_t<T>::iterator p, size_t n,
                          const T& val) {
     if (n == 0 || p < m_begin || p > m_end) return;
 
-    if (m_begin == 0 || m_end < m_begin) {
+    if (m_begin == nullptr || m_end < m_begin) {
         reserve(n);
         for (size_t j = 0; j < n; ++ j, ++ m_end)
             *m_end = val;
     }
-    else if (actual != 0 && actual->filename() == 0 &&
+    else if (actual != nullptr && actual->filename() == nullptr &&
              m_end+n <= (T*)(actual->end())) {
         // use the existing space
         m_end += n;
@@ -1676,12 +1675,12 @@ ibis::array_t<T>::insert(typename ibis::array_t<T>::iterator p,
     if (back <= front || p < m_begin || p > m_end) return;
     const difference_type n = back - front;
 
-    if (m_begin == 0 || m_end < m_begin) { // no space
+    if (m_begin == nullptr || m_end < m_begin) { // no space
         reserve(n);
         for (const_iterator j = front; j < back; ++ j, ++ m_end)
             *m_end = *j;
     }
-    else if (actual != 0 && actual->filename() == 0 &&
+    else if (actual != nullptr && actual->filename() == nullptr &&
              m_end+n <= (T*)(actual->end())) {
         // enough space, simply copy the values
         m_end += n;
@@ -1694,7 +1693,7 @@ ibis::array_t<T>::insert(typename ibis::array_t<T>::iterator p,
         }
     }
     else {      // need new memory, copy-and-swap
-        const difference_type nold = (m_begin > 0 && m_end > m_begin ?
+        const difference_type nold = (m_begin != nullptr && m_end > m_begin ?
                                       m_end - m_begin : 0);
         size_t nnew = static_cast<size_t>(nold + (nold>=n ? nold : n));
         if (nnew > 0x7FFFFFFFU) {
@@ -1762,7 +1761,7 @@ ibis::array_t<T>::erase(typename ibis::array_t<T>::iterator i,
 /// available file pointers.
 template<class T>
 void ibis::array_t<T>::read(const char* file) {
-    if (file == 0 || *file == 0) return;
+    if (file == nullptr || *file == 0) return;
     freeMemory();
     int ierr = ibis::fileManager::instance().getFile(file, &actual);
     if (ierr == 0) {
@@ -1782,7 +1781,7 @@ void ibis::array_t<T>::read(const char* file) {
 template<class T>
 off_t ibis::array_t<T>::read(const char* fname, const off_t begin,
                              const off_t end) {
-    if (fname == 0 || *fname == 0) return -2;
+    if (fname == nullptr || *fname == 0) return -2;
     off_t nread = actual->read(fname, begin, end);
     if (begin+nread == end) {
         m_begin = (T*)(actual->begin());
@@ -1825,7 +1824,7 @@ int ibis::array_t<T>::write(const char* file) const {
 
     off_t n, i;
     FILE *out = fopen(file, "wb");
-    if (out == 0) {
+    if (out == nullptr) {
         LOGGER(ibis::gVerbose >= 0)
             << "array_t<T>::write is unable open file \"" << file << "\" ... "
             << (errno ? strerror(errno) : "no free stdio stream");
@@ -1849,7 +1848,7 @@ int ibis::array_t<T>::write(const char* file) const {
 /// of the array is written out in binary.
 template<class T>
 int ibis::array_t<T>::write(FILE* fptr) const {
-    if (fptr == 0) return -1;
+    if (fptr == nullptr) return -1;
     if (m_end <= m_begin) return 0;
 
     off_t n, i;
@@ -1872,10 +1871,10 @@ void ibis::array_t<T>::printStatus(std::ostream &out) const {
         << ", m_end = " <<  static_cast<void*>(m_end) << ", size = "
         << m_end - m_begin << "\n";
 #if defined(DEBUG) || defined(_DEBUG)
-    if (actual != 0 && ibis::gVerbose > 6)
+    if (actual != nullptr && ibis::gVerbose > 6)
         actual->printStatus(out);
 #else
-    if (actual != 0 && ibis::gVerbose > 16)
+    if (actual != nullptr && ibis::gVerbose > 16)
         actual->printStatus(out);
 #endif
 } // ibis::array_t<T>::printStatus

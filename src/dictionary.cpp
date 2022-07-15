@@ -226,12 +226,12 @@ int ibis::dictionary::writeBuffer(FILE *fptr, uint32_t nkeys,
         pos[j+1] += pos[j];
 
     ierr = fwrite(pos.begin(), sizeof(uint64_t), nkeys+1, fptr);
-    LOGGER(ierr != (int)(nkeys+1) && ibis::gVerbose > 1)
+    LOGGER(ierr != (size_t)(nkeys+1) && ibis::gVerbose > 1)
         << "Warning -- dictionary::writeBuffer failed to write the offsets, "
         "expected fwrite to return " << nkeys+1 << ", but got " << ierr;
 
     ierr = fwrite(qos.begin(), sizeof(uint32_t), nkeys, fptr);
-    LOGGER(ierr != (int)(nkeys) && ibis::gVerbose > 1)
+    LOGGER(ierr != (size_t)(nkeys) && ibis::gVerbose > 1)
         << "Warning -- dictionary::writeBuffer failed to write the keys, "
         "expected fwrite to return " << nkeys << ", but got " << ierr;
 

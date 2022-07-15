@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at ACM.org>
 //         Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 Univeristy of California
+// Copyright (c) 2000-2020 Univeristy of California
 //
 // Purpose:
 // This file contains an implementation of the fileManager used by IBIS.
@@ -1882,7 +1882,7 @@ ibis::fileManager::storage::storage(size_t n)
                 << "totalBytes = " << ibis::fileManager::totalBytes()
                 << ", maxBytes = " << ibis::fileManager::maxBytes
                 << IBIS_FILE_LINE;
-            throw ibis::bad_alloc("storage::ctor(memory):loc1 failed"
+            throw ibis::bad_alloc("storage::ctor(memory) bad_alloc @ loc1"
                                   IBIS_FILE_LINE);
         }
 #else
@@ -1892,7 +1892,7 @@ ibis::fileManager::storage::storage(size_t n)
             << "totalBytes = " << ibis::fileManager::totalBytes()
             << ", maxBytes = " << ibis::fileManager::maxBytes
             << IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(memory):loc1 failed"
+        throw ibis::bad_alloc("storage::ctor(memory) bad_alloc @ loc2"
                               IBIS_FILE_LINE);
 #endif
     }
@@ -1912,7 +1912,7 @@ ibis::fileManager::storage::storage(size_t n)
                     << "totalBytes = " << ibis::fileManager::totalBytes()
                     << ", maxBytes = " << ibis::fileManager::maxBytes
                     << IBIS_FILE_LINE;
-                throw ibis::bad_alloc("storage::ctor(memory):loc2 failed"
+                throw ibis::bad_alloc("storage::ctor(memory) bad_alloc @ loc3"
                                       IBIS_FILE_LINE);
             }
         }
@@ -1930,7 +1930,7 @@ ibis::fileManager::storage::storage(size_t n)
                     ibis::fileManager::instance().printStatus(lg());
                 }
             }
-            throw ibis::bad_alloc("storage::ctor(memory):loc3 failed"
+            throw ibis::bad_alloc("storage::ctor(memory) bad_alloc @ loc4"
                                   IBIS_FILE_LINE);
         }
 #else
@@ -1938,7 +1938,7 @@ ibis::fileManager::storage::storage(size_t n)
             << "Warning -- fileManager::storage::ctor failed to find "
             << ibis::util::groupby1000(n) << " bytes of space in memory"
             << IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(memory):loc2 failed"
+        throw ibis::bad_alloc("storage::ctor(memory) bad_alloc @ loc5"
                               IBIS_FILE_LINE);
 #endif
     }
@@ -1978,7 +1978,7 @@ ibis::fileManager::storage::storage(const char* fname,
             << "Warning -- fileManager::storage expected to read " << nbytes
             << " byte" << (nbytes > 1 ? "s" : "") << " from " << fname
             << ", but only read " << ierr << IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(file segement) failed"
+        throw ibis::bad_alloc("storage::ctor(file segement) bad_alloc"
                               IBIS_FILE_LINE);
     }
 } // ibis::fileManager::storage::storage
@@ -2004,7 +2004,7 @@ ibis::fileManager::storage::storage(const int fdes,
             << "Warning -- fileManager expected to read " << nbytes << " byte"
             << (nbytes > 1 ? "s" : "") << " from file descriptor " << fdes
             << ", but only read " << ierr << IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(file segement) failed"
+        throw ibis::bad_alloc("storage::ctor(file segement) bad_alloc"
                               IBIS_FILE_LINE);
     }
 } // ibis::fileManager::storage::storage
@@ -2029,7 +2029,7 @@ ibis::fileManager::storage::storage(const char* begin, const char* end)
                 << " bytes of space to copy from "
                 << static_cast<const void*>(begin)
                 << IBIS_FILE_LINE;
-            throw ibis::bad_alloc("storage::ctor(copy memory) failed"
+            throw ibis::bad_alloc("storage::ctor(copy memory) bad_alloc"
                                   IBIS_FILE_LINE);
         }
 #else
@@ -2037,7 +2037,7 @@ ibis::fileManager::storage::storage(const char* begin, const char* end)
             << "Warning -- fileManager::storage::ctor failed to find "
             << ibis::util::groupby1000(nbytes) << " bytes of space in memory"
             IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(copy memory) failed"
+        throw ibis::bad_alloc("storage::ctor(copy memory) bad_alloc"
                               IBIS_FILE_LINE);
 #endif
     }
@@ -2056,7 +2056,7 @@ ibis::fileManager::storage::storage(const char* begin, const char* end)
                     " space for copying from "
                     << static_cast<const void*>(begin)
                     << IBIS_FILE_LINE;
-                throw ibis::bad_alloc("storage::ctor(copy memory) failed"
+                throw ibis::bad_alloc("storage::ctor(copy memory) bad_alloc"
                                       IBIS_FILE_LINE);
             }
         }
@@ -2070,7 +2070,7 @@ ibis::fileManager::storage::storage(const char* begin, const char* end)
                 if (ibis::gVerbose > 2) // dump the current list of files
                     ibis::fileManager::instance().printStatus(lg());
             }
-            throw ibis::bad_alloc("storage::ctor(copy memory) failed"
+            throw ibis::bad_alloc("storage::ctor(copy memory) bad_alloc"
                                   IBIS_FILE_LINE);
         }
 #else
@@ -2078,7 +2078,7 @@ ibis::fileManager::storage::storage(const char* begin, const char* end)
             << "Warning -- fileManager::storage::ctor failed to find "
             << ibis::util::groupby1000(nbytes) << " bytes of space in memory"
             IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(copy memory) failed"
+        throw ibis::bad_alloc("storage::ctor(copy memory) bad_alloc"
                               IBIS_FILE_LINE);
 #endif
     }
@@ -2118,14 +2118,14 @@ ibis::fileManager::storage::storage(const ibis::fileManager::storage& rhs)
                 << "Warning -- fileManager::storage failed to find "
                 << ibis::util::groupby1000(nbytes)
                 << " bytes of space to make an in-memory copy" IBIS_FILE_LINE;
-            throw ibis::bad_alloc("storage::ctor(copy) failed" IBIS_FILE_LINE);
+            throw ibis::bad_alloc("storage::ctor(copy) bad_alloc" IBIS_FILE_LINE);
         }
 #else
         LOGGER(ibis::gVerbose >= 0)
             << "Warning -- fileManager::storage::ctor failed to find "
             << ibis::util::groupby1000(nbytes) << " bytes of space in memory"
             IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(copy) failed" IBIS_FILE_LINE);
+        throw ibis::bad_alloc("storage::ctor(copy) bad_alloc" IBIS_FILE_LINE);
 #endif
     }
     m_begin = static_cast<char*>(malloc(nbytes));
@@ -2141,7 +2141,7 @@ ibis::fileManager::storage::storage(const ibis::fileManager::storage& rhs)
                 LOGGER(ibis::gVerbose >= 0)
                     << "Warning -- fileManager::storage failed to unload "
                     "space to make an in-memory copy" IBIS_FILE_LINE;
-                throw ibis::bad_alloc("storage::ctor(copy) failed"
+                throw ibis::bad_alloc("storage::ctor(copy) bad_alloc"
                                       IBIS_FILE_LINE);
             }
         }
@@ -2155,14 +2155,14 @@ ibis::fileManager::storage::storage(const ibis::fileManager::storage& rhs)
                 if (ibis::gVerbose > 2) // dump the current list of files
                     ibis::fileManager::instance().printStatus(lg());
             }
-            throw ibis::bad_alloc("storage::ctor(copy) failed" IBIS_FILE_LINE);
+            throw ibis::bad_alloc("storage::ctor(copy) bad_alloc" IBIS_FILE_LINE);
         }
 #else
         LOGGER(ibis::gVerbose >= 0)
             << "Warning -- fileManager::storage::ctor failed to find "
             << ibis::util::groupby1000(nbytes) << " bytes of space in memory"
             << IBIS_FILE_LINE;
-        throw ibis::bad_alloc("storage::ctor(copy) failed" IBIS_FILE_LINE);
+        throw ibis::bad_alloc("storage::ctor(copy) bad_alloc" IBIS_FILE_LINE);
 #endif
     }
     // success

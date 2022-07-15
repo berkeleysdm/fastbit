@@ -2,7 +2,7 @@
 //	Author: John Wu <John.Wu at ACM.org>
 //              Lawrence Berkeley National Laboratory
 //
-// Copyright (c) 2000-2016, The Regents of the University of California,
+// Copyright (c) 2000-2020, The Regents of the University of California,
 // through Lawrence Berkeley National Laboratory (subject to receipt of any
 // required approvals from the U.S. Dept. of Energy).  All rights reserved.
 //
@@ -49,11 +49,11 @@
 <A HREF="http://sdm.lbl.gov/">Scientific Data Management</A>,
 <A HREF="http://www.lbl.gov/">Lawrence Berkeley National Lab</A>
 \n With additional contributors listed in files
-<A HREF="https://codeforge.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/AUTHORS?root=fastbit&view=markup">AUTHORS</A>
+<A HREF="https://code.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/AUTHORS?root=fastbit&view=markup">AUTHORS</A>
 and
-<A HREF="https://codeforge.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/ChangeLog?root=fastbit&view=markup">ChangeLog</A>.
+<A HREF="https://code.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/ChangeLog?root=fastbit&view=markup">ChangeLog</A>.
 
-\Copyright (c) 2000-2016
+\copyright (c) 2000-2020
 <A HREF="http://www.universityofcalifornia.edu/">University of California</A>
 
 \section intro Introduction
@@ -68,7 +68,7 @@ top of it.  In particular, the user data is NOT required to be under the
 control of FastBit software.
 
 The source code of FastBit is available at <A
-HREF="https://codeforge.lbl.gov/projects/fastbit/">http://goo.gl/JYMzu</A>
+HREF="https://code.lbl.gov/projects/fastbit/">http://goo.gl/JYMzu</A>
 under <A HREF="http://crd.lbl.gov/~kewu/fastbit/src/license.txt">LGPL</A>.
 
 \section bitmap Bitmap Index
@@ -233,9 +233,9 @@ crucial in establishing the foundation of the FastBit system and applying
 the software to a number of applications.  Many thanks to the early users.
 Their generous feedback and suggestions are invaluable to the development
 of the software.  A full list of contributors is in the file <A
-HREF="https://codeforge.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/AUTHORS?root=fastbit&view=markup">AUTHORS</A>.
+HREF="https://code.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/AUTHORS?root=fastbit&view=markup">AUTHORS</A>.
 User feedback affecting the code and documentation is recorded in <A
-HREF="https://codeforge.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/ChangeLog?root=fastbit&view=markup">ChangeLog</A>
+HREF="https://code.lbl.gov/plugins/scmsvn/viewcvs.php/trunk/ChangeLog?root=fastbit&view=markup">ChangeLog</A>
 along with user names.
 
 This work was supported by the Director, Office of Science, Office of
@@ -254,7 +254,7 @@ Send any comments, bug reports, and patches to
 <fastbit-users@hpcrdm.lbl.gov>.
 
 \section Copyright Notice
-FastBit, Copyright (c) 2000-2016, The Regents of the University of California,
+FastBit, Copyright (c) 2000-2020, The Regents of the University of California,
 through Lawrence Berkeley National Laboratory (subject to receipt of any
 required approvals from the U.S. Dept. of Energy).  All rights reserved.
 
@@ -275,7 +275,8 @@ derivative works, distribute copies to the public, perform publicly and
 display publicly, and to permit others to do so.
 
 \section License
-"FastBit, Copyright (c) 2000-2016, The Regents of the University of
+
+"FastBit, Copyright (c) 2000-2020, The Regents of the University of
 California, through Lawrence Berkeley National Laboratory (subject to
 receipt of any required approvals from the U.S. Dept. of Energy).  All
 rights reserved."
@@ -327,133 +328,7 @@ derivative works thereof, in binary and source code form.
 /// could be considered as a short-hand for an Implementation of Bitmap
 /// Indexing System or Ibis Bitmap Indexing System.
 namespace ibis {
-    /// Initializes the memory manager of FastBit.  It reads the RC file
-    /// (rcfile) first before initializes the memory manager.  If the
-    /// caller wishes to read multiple RC files or add parameters to
-    /// ibis::gParameters, these operations need to take place before
-    /// calling this function or any function that creates, initializes or
-    /// uses ibis::array_t, ibis::bitvector, ibis::part or ibis::table.  If
-    /// the user neglects to call ibis::init, the memory manager will be
-    /// initialized when the first time it is needed.
-    ///
-    /// @param rcfile A file containing name-value pairs that specifies
-    ///   parameters for controlling the behavior of ibis.
-    /// @param mesgfile Name of the file to contain messages printed by
-    ///   FastBit functions.
-    ///
-    /// If an RC file is not specified or the file name is null, this
-    /// function will attempt to read one of the following file (in the
-    /// given order).
-    ///   -# a file named in environment variable IBISRC,
-    ///   -# a file named ibis.rc in the current working directory,
-    ///   -# a file named .ibisrc in the user's home directory.
-    ///   .
-    /// In an RC file, one parameter occupies a line and the equal sign
-    /// "=" is required to delimit the name and the value, for example,
-    ///
-    ///@verbatim
-    ///   dataDir = /data/dns
-    ///   cacheDir = /tmp/ibiscache
-    ///@endverbatim
-    ///
-    /// The minimal recommended parameters of an RC file are
-    ///   - dataDir, which can also be written as dataDir1 or indexDir.  It
-    ///     tells ibis where to find the data to be queried.  Multiple data
-    ///     directories may be specified by adding prefix to the parameter
-    ///     name, for example, dns.dataDir and random.dataDir.
-    ///   - cacheDir, which can also be written as cacheDirectory.  This
-    ///     directory is used by ibis to write internal data for recovery
-    ///     and other purposes.
-    ///
-    /// The message file (also called the log file) name may also be
-    /// specified in the RC file under the key logfile, e.g.,
-    ///
-    ///@verbatim
-    ///   logfile = /tmp/ibis.log
-    ///@endverbatim
-    ///
-    /// One may call ibis::util::closeLogFile to close the log file, but
-    /// this is not mandatory.  The runtime system will close all open
-    /// files upon the termination of the user program.
-    inline void init(const char* rcfile=0,
-		     const char* mesgfile=0) {
-#if defined(DEBUG) || defined(_DEBUG)
-	if (gVerbose <= 0) {
-#if DEBUG + 0 > 10 || _DEBUG + 0 > 10
-	    gVerbose = INT_MAX;
-#elif DEBUG + 0 > 0
-	    gVerbose += 7 * DEBUG;
-#elif _DEBUG + 0 > 0
-	    gVerbose += 5 * _DEBUG;
-#else
-	    gVerbose += 3;
-#endif
-	}
-#endif
-        int ierr;
-#if defined(PTW32_STATIC_LIB)
-	if (ibis::util::envLock == PTHREAD_MUTEX_INITIALIZER) {
-	    ierr = pthread_mutex_init(&ibis::util::envLock, 0);
-	    if (ierr != 0)
-		throw "ibis::init failed to initialize ibis::util::envLock";
-	}
-#endif
-	if (mesgfile != 0 && *mesgfile != 0) {
-	    ierr = ibis::util::setLogFileName(mesgfile);
-	    if (ierr < 0 && ibis::gVerbose >= 0) {
-		std::cerr << "ibis::init failed to set log file to "
-			  << mesgfile << std::endl;
-	     }
-	}
-
-	if (0 != atexit(ibis::util::closeLogFile)) {
-	    if (ibis::gVerbose >= 0)
-		std::cerr << "ibis::init failed to register the function "
-		    "ibis::util::closeLogFile with atexit" << std::endl;
-	}
-	// if (0 != atexit(ibis::util::clearDatasets)) {
-	//     if (ibis::gVerbose >= 0)
-	// 	std::cerr << "ibis::init failed to register the function "
-	// 	    "ibis::util::clearDatasets with atexit" << std::endl;
-	// }
-
-        ierr = ibis::gParameters().read(rcfile);
-        if (ierr < 0)
-            std::cerr << "ibis::init failed to open configuration file \""
-                      << (rcfile!=0&&*rcfile!=0 ? rcfile : "") << '"'
-                      << std::endl;
-	(void) ibis::fileManager::instance(); // initialize the file manager
-	if (! ibis::gParameters().empty()) {
-	    ierr = ibis::util::gatherParts(ibis::datasets, ibis::gParameters());
-            if (ibis::gVerbose > 0 && ierr > 0)
-                std::cerr << "ibis::init found " << ierr << " data partition"
-                          << (ierr > 1 ? "s" : "") << std::endl;
-        }
-#if defined(_WIN32) && defined(_MSC_VER) && (defined(_DEBUG) || defined(DEBUG))
-	std::cerr << "DEBUG - WIN32 related macros";
-#ifdef NTDDI_VERSION
-	std::cerr << "\nNTDDI_VERSION=" << std::hex << NTDDI_VERSION
-		  << std::dec;
-#endif
-#ifdef NTDDI_WINVISTA
-	std::cerr << "\nNTDDI_WINVISTA=" << std::hex << NTDDI_WINVISTA
-		  << std::dec;
-#endif
-#ifdef WINVER
-	std::cerr << "\nWINVER=" << std::hex << WINVER << std::dec;
-#endif
-#if defined(HAVE_WIN_ATOMIC32)
-	std::cerr << "\nHAVE_WIN_ATOMIC32 true";
-#else
-	std::cerr << "\nHAVE_WIN_ATOMIC32 flase";
-#endif
-#if defined(HAVE_WIN_ATOMIC64)
-	std::cerr << "\nHAVE_WIN_ATOMIC64 true";
-#else
-	std::cerr << "\nHAVE_WIN_ATOMIC64 flase";
-#endif
-	std::cerr << std::endl;
-#endif
-    }
+    // defined in src/iapi.cpp
+    void init(const char* rcfile=0, const char* mesgfile=0);
 }
 #endif // IBIS_H

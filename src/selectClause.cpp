@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2020 the Regents of the University of California
 #include "part.h"
 #include "qExpr.h"
 #include "selectLexer.h"
@@ -633,13 +633,13 @@ int ibis::selectClause::find(const char* key) const {
             ret = it->second;
         }
         else {
-            // try to match names of the terms one at a time
-            for (ret = 0; ret < static_cast<int>(names_.size()); ++ ret) {
+            // try to match xnames of the terms one at a time
+            for (ret = 0; ret < static_cast<int>(xnames_.size()); ++ ret) {
                 if (stricmp(xnames_[ret].c_str(), key) == 0)
                     break;
             }
             // try to match the string version of each arithmetic expression
-            if (ret >= static_cast<int>(names_.size())) {
+            if (ret >= static_cast<int>(xnames_.size())) {
                 for (unsigned int i = 0; i < atms_.size(); ++ i) {
                     std::ostringstream oss;
                     switch (aggr_[i]) {
@@ -686,7 +686,7 @@ int ibis::selectClause::find(const char* key) const {
                     }
                 }
             }
-            if (ret >= static_cast<int>(names_.size()))
+            if (ret >= static_cast<int>(atms_.size()))
                 ret = -1;
         }
     }

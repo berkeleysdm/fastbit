@@ -339,10 +339,6 @@ public:
     /// getNRows returns 0.
     bool empty() const {return (bits.empty() || nrows == 0);}
 
-    /// The index object is considered empty if there is no bitmap or
-    /// getNRows returns 0.
-    bool empty() const {return (bits.empty() || nrows == 0);}
-
     void addBins(uint32_t ib, uint32_t ie, ibis::bitvector& res) const;
     void addBins(uint32_t ib, uint32_t ie, ibis::bitvector& res,
 		 const ibis::bitvector& tot) const;

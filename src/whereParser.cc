@@ -1,8 +1,8 @@
-// A Bison parser, made by GNU Bison 3.0.4.
+// A Bison parser, made by GNU Bison 3.7.6.
 
 // Skeleton implementation for Bison LALR(1) parsers in C++
 
-// Copyright (C) 2002-2015 Free Software Foundation, Inc.
+// Copyright (C) 2002-2015, 2018-2021 Free Software Foundation, Inc.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // As a special exception, you may create a larger work that contains
 // part or all of the Bison parser skeleton and distribute that work
@@ -29,8 +29,13 @@
 
 // This special exception was added by the Free Software Foundation in
 // version 2.2 of Bison.
-// //                    "%code top" blocks.
-#line 6 "whereParser.yy" // lalr1.cc:397
+
+// DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+// especially those whose name start with YY_ or yy_.  They are
+// private implementation details that can be changed or removed.
+
+// "%code top" blocks.
+#line 6 "whereParser.yy"
 
 /** \file Defines the parser for the where clause accepted by FastBit IBIS.
     The definitions are processed through bison.
@@ -38,32 +43,23 @@
 
 #include <iostream>
 
-#line 42 "whereParser.cc" // lalr1.cc:397
+#line 47 "whereParser.cc"
 
 
-// First part of user declarations.
 
-#line 47 "whereParser.cc" // lalr1.cc:404
-
-# ifndef YY_NULLPTR
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
-#  else
-#   define YY_NULLPTR 0
-#  endif
-# endif
 
 #include "whereParser.hh"
 
-// User implementation prologue.
-#line 106 "whereParser.yy" // lalr1.cc:412
+// Second part of user prologue.
+#line 107 "whereParser.yy"
 
 #include "whereLexer.h"
 
 #undef yylex
 #define yylex driver.lexer->lex
 
-#line 67 "whereParser.cc" // lalr1.cc:412
+#line 62 "whereParser.cc"
+
 
 
 #ifndef YY_
@@ -75,6 +71,16 @@
 # endif
 # ifndef YY_
 #  define YY_(msgid) msgid
+# endif
+#endif
+
+
+// Whether we are compiled with exception support.
+#ifndef YY_EXCEPTIONS
+# if defined __GNUC__ && !defined __EXCEPTIONS
+#  define YY_EXCEPTIONS 0
+# else
+#  define YY_EXCEPTIONS 1
 # endif
 #endif
 
@@ -95,12 +101,9 @@
         {                                                               \
           (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;      \
         }                                                               \
-    while (/*CONSTCOND*/ false)
+    while (false)
 # endif
 
-
-// Suppress unused-variable warnings by "using" E.
-#define YYUSE(E) ((void) (E))
 
 // Enable debugging if requested.
 #if YYDEBUG
@@ -114,7 +117,7 @@
     {                                           \
       *yycdebug_ << Title << ' ';               \
       yy_print_ (*yycdebug_, Symbol);           \
-      *yycdebug_ << std::endl;                  \
+      *yycdebug_ << '\n';                       \
     }                                           \
   } while (false)
 
@@ -127,15 +130,15 @@
 # define YY_STACK_PRINT()               \
   do {                                  \
     if (yydebug_)                       \
-      yystack_print_ ();                \
+      yy_stack_print_ ();                \
   } while (false)
 
 #else // !YYDEBUG
 
 # define YYCDEBUG if (false) std::cerr
-# define YY_SYMBOL_PRINT(Title, Symbol)  YYUSE(Symbol)
-# define YY_REDUCE_PRINT(Rule)           static_cast<void>(0)
-# define YY_STACK_PRINT()                static_cast<void>(0)
+# define YY_SYMBOL_PRINT(Title, Symbol)  YY_USE (Symbol)
+# define YY_REDUCE_PRINT(Rule)           static_cast<void> (0)
+# define YY_STACK_PRINT()                static_cast<void> (0)
 
 #endif // !YYDEBUG
 
@@ -147,54 +150,17 @@
 #define YYERROR         goto yyerrorlab
 #define YYRECOVERING()  (!!yyerrstatus_)
 
-#line 25 "whereParser.yy" // lalr1.cc:479
+#line 26 "whereParser.yy"
 namespace ibis {
-#line 153 "whereParser.cc" // lalr1.cc:479
-
-  /* Return YYSTR after stripping away unnecessary quotes and
-     backslashes, so that it's suitable for yyerror.  The heuristic is
-     that double-quoting is unnecessary unless the string contains an
-     apostrophe, a comma, or backslash (other than backslash-backslash).
-     YYSTR is taken from yytname.  */
-  std::string
-  whereParser::yytnamerr_ (const char *yystr)
-  {
-    if (*yystr == '"')
-      {
-        std::string yyr = "";
-        char const *yyp = yystr;
-
-        for (;;)
-          switch (*++yyp)
-            {
-            case '\'':
-            case ',':
-              goto do_not_strip_quotes;
-
-            case '\\':
-              if (*++yyp != '\\')
-                goto do_not_strip_quotes;
-              // Fall through.
-            default:
-              yyr += *yyp;
-              break;
-
-            case '"':
-              return yyr;
-            }
-      do_not_strip_quotes: ;
-      }
-
-    return yystr;
-  }
-
+#line 156 "whereParser.cc"
 
   /// Build a parser object.
   whereParser::whereParser (class ibis::whereClause& driver_yyarg)
-    :
 #if YYDEBUG
-      yydebug_ (false),
+    : yydebug_ (false),
       yycdebug_ (&std::cerr),
+#else
+    :
 #endif
       driver (driver_yyarg)
   {}
@@ -202,144 +168,122 @@ namespace ibis {
   whereParser::~whereParser ()
   {}
 
+  whereParser::syntax_error::~syntax_error () YY_NOEXCEPT YY_NOTHROW
+  {}
 
   /*---------------.
-  | Symbol types.  |
+  | symbol kinds.  |
   `---------------*/
-
-  inline
-  whereParser::syntax_error::syntax_error (const location_type& l, const std::string& m)
-    : std::runtime_error (m)
-    , location (l)
-  {}
 
   // basic_symbol.
   template <typename Base>
-  inline
-  whereParser::basic_symbol<Base>::basic_symbol ()
-    : value ()
-  {}
-
-  template <typename Base>
-  inline
-  whereParser::basic_symbol<Base>::basic_symbol (const basic_symbol& other)
-    : Base (other)
-    , value ()
-    , location (other.location)
-  {
-    value = other.value;
-  }
-
-
-  template <typename Base>
-  inline
-  whereParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const semantic_type& v, const location_type& l)
-    : Base (t)
-    , value (v)
-    , location (l)
+  whereParser::basic_symbol<Base>::basic_symbol (const basic_symbol& that)
+    : Base (that)
+    , value (that.value)
+    , location (that.location)
   {}
 
 
   /// Constructor for valueless symbols.
   template <typename Base>
-  inline
-  whereParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const location_type& l)
+  whereParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, YY_MOVE_REF (location_type) l)
     : Base (t)
     , value ()
     , location (l)
   {}
 
   template <typename Base>
-  inline
-  whereParser::basic_symbol<Base>::~basic_symbol ()
+  whereParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, YY_RVREF (semantic_type) v, YY_RVREF (location_type) l)
+    : Base (t)
+    , value (YY_MOVE (v))
+    , location (YY_MOVE (l))
+  {}
+
+  template <typename Base>
+  whereParser::symbol_kind_type
+  whereParser::basic_symbol<Base>::type_get () const YY_NOEXCEPT
   {
-    clear ();
+    return this->kind ();
   }
 
   template <typename Base>
-  inline
-  void
-  whereParser::basic_symbol<Base>::clear ()
-  {
-    Base::clear ();
-  }
-
-  template <typename Base>
-  inline
   bool
-  whereParser::basic_symbol<Base>::empty () const
+  whereParser::basic_symbol<Base>::empty () const YY_NOEXCEPT
   {
-    return Base::type_get () == empty_symbol;
+    return this->kind () == symbol_kind::S_YYEMPTY;
   }
 
   template <typename Base>
-  inline
   void
   whereParser::basic_symbol<Base>::move (basic_symbol& s)
   {
-    super_type::move(s);
-    value = s.value;
-    location = s.location;
+    super_type::move (s);
+    value = YY_MOVE (s.value);
+    location = YY_MOVE (s.location);
   }
 
-  // by_type.
-  inline
-  whereParser::by_type::by_type ()
-    : type (empty_symbol)
+  // by_kind.
+  whereParser::by_kind::by_kind ()
+    : kind_ (symbol_kind::S_YYEMPTY)
   {}
 
-  inline
-  whereParser::by_type::by_type (const by_type& other)
-    : type (other.type)
-  {}
-
-  inline
-  whereParser::by_type::by_type (token_type t)
-    : type (yytranslate_ (t))
-  {}
-
-  inline
-  void
-  whereParser::by_type::clear ()
+#if 201103L <= YY_CPLUSPLUS
+  whereParser::by_kind::by_kind (by_kind&& that)
+    : kind_ (that.kind_)
   {
-    type = empty_symbol;
+    that.clear ();
+  }
+#endif
+
+  whereParser::by_kind::by_kind (const by_kind& that)
+    : kind_ (that.kind_)
+  {}
+
+  whereParser::by_kind::by_kind (token_kind_type t)
+    : kind_ (yytranslate_ (t))
+  {}
+
+  void
+  whereParser::by_kind::clear () YY_NOEXCEPT
+  {
+    kind_ = symbol_kind::S_YYEMPTY;
   }
 
-  inline
   void
-  whereParser::by_type::move (by_type& that)
+  whereParser::by_kind::move (by_kind& that)
   {
-    type = that.type;
+    kind_ = that.kind_;
     that.clear ();
   }
 
-  inline
-  int
-  whereParser::by_type::type_get () const
+  whereParser::symbol_kind_type
+  whereParser::by_kind::kind () const YY_NOEXCEPT
   {
-    return type;
+    return kind_;
+  }
+
+  whereParser::symbol_kind_type
+  whereParser::by_kind::type_get () const YY_NOEXCEPT
+  {
+    return this->kind ();
   }
 
 
   // by_state.
-  inline
-  whereParser::by_state::by_state ()
+  whereParser::by_state::by_state () YY_NOEXCEPT
     : state (empty_state)
   {}
 
-  inline
-  whereParser::by_state::by_state (const by_state& other)
-    : state (other.state)
+  whereParser::by_state::by_state (const by_state& that) YY_NOEXCEPT
+    : state (that.state)
   {}
 
-  inline
   void
-  whereParser::by_state::clear ()
+  whereParser::by_state::clear () YY_NOEXCEPT
   {
     state = empty_state;
   }
 
-  inline
   void
   whereParser::by_state::move (by_state& that)
   {
@@ -347,36 +291,39 @@ namespace ibis {
     that.clear ();
   }
 
-  inline
-  whereParser::by_state::by_state (state_type s)
+  whereParser::by_state::by_state (state_type s) YY_NOEXCEPT
     : state (s)
   {}
 
-  inline
-  whereParser::symbol_number_type
-  whereParser::by_state::type_get () const
+  whereParser::symbol_kind_type
+  whereParser::by_state::kind () const YY_NOEXCEPT
   {
     if (state == empty_state)
-      return empty_symbol;
+      return symbol_kind::S_YYEMPTY;
     else
-      return yystos_[state];
+      return YY_CAST (symbol_kind_type, yystos_[+state]);
   }
 
-  inline
   whereParser::stack_symbol_type::stack_symbol_type ()
   {}
 
-
-  inline
-  whereParser::stack_symbol_type::stack_symbol_type (state_type s, symbol_type& that)
-    : super_type (s, that.location)
+  whereParser::stack_symbol_type::stack_symbol_type (YY_RVREF (stack_symbol_type) that)
+    : super_type (YY_MOVE (that.state), YY_MOVE (that.value), YY_MOVE (that.location))
   {
-    value = that.value;
+#if 201103L <= YY_CPLUSPLUS
     // that is emptied.
-    that.type = empty_symbol;
+    that.state = empty_state;
+#endif
   }
 
-  inline
+  whereParser::stack_symbol_type::stack_symbol_type (state_type s, YY_MOVE_REF (symbol_type) that)
+    : super_type (s, YY_MOVE (that.value), YY_MOVE (that.location))
+  {
+    // that is emptied.
+    that.kind_ = symbol_kind::S_YYEMPTY;
+  }
+
+#if YY_CPLUSPLUS < 201103L
   whereParser::stack_symbol_type&
   whereParser::stack_symbol_type::operator= (const stack_symbol_type& that)
   {
@@ -386,9 +333,19 @@ namespace ibis {
     return *this;
   }
 
+  whereParser::stack_symbol_type&
+  whereParser::stack_symbol_type::operator= (stack_symbol_type& that)
+  {
+    state = that.state;
+    value = that.value;
+    location = that.location;
+    // that is emptied.
+    that.state = empty_state;
+    return *this;
+  }
+#endif
 
   template <typename Base>
-  inline
   void
   whereParser::yy_destroy_ (const char* yymsg, basic_symbol<Base>& yysym) const
   {
@@ -396,85 +353,73 @@ namespace ibis {
       YY_SYMBOL_PRINT (yymsg, yysym);
 
     // User destructor.
-    switch (yysym.type_get ())
+    switch (yysym.kind ())
     {
-            case 38: // "signed integer sequence"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 406 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_INTSEQ: // "signed integer sequence"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 362 "whereParser.cc"
         break;
 
-      case 39: // "unsigned integer sequence"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 413 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_UINTSEQ: // "unsigned integer sequence"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 368 "whereParser.cc"
         break;
 
-      case 40: // "name string"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 420 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_NOUNSTR: // "name string"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 374 "whereParser.cc"
         break;
 
-      case 41: // "number sequence"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 427 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_NUMSEQ: // "number sequence"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 380 "whereParser.cc"
         break;
 
-      case 42: // "string sequence"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 434 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_STRSEQ: // "string sequence"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 386 "whereParser.cc"
         break;
 
-      case 43: // "string literal"
-
-#line 103 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 441 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_STRLIT: // "string literal"
+#line 104 "whereParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 392 "whereParser.cc"
         break;
 
-      case 50: // qexpr
-
-#line 104 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.whereNode); }
-#line 448 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_qexpr: // qexpr
+#line 105 "whereParser.yy"
+                    { delete (yysym.value.whereNode); }
+#line 398 "whereParser.cc"
         break;
 
-      case 51: // simpleRange
-
-#line 104 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.whereNode); }
-#line 455 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_simpleRange: // simpleRange
+#line 105 "whereParser.yy"
+                    { delete (yysym.value.whereNode); }
+#line 404 "whereParser.cc"
         break;
 
-      case 52: // compRange2
-
-#line 104 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.whereNode); }
-#line 462 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_compRange2: // compRange2
+#line 105 "whereParser.yy"
+                    { delete (yysym.value.whereNode); }
+#line 410 "whereParser.cc"
         break;
 
-      case 53: // compRange3
-
-#line 104 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.whereNode); }
-#line 469 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_compRange3: // compRange3
+#line 105 "whereParser.yy"
+                    { delete (yysym.value.whereNode); }
+#line 416 "whereParser.cc"
         break;
 
-      case 54: // mathExpr
-
-#line 104 "whereParser.yy" // lalr1.cc:614
-        { delete (yysym.value.whereNode); }
-#line 476 "whereParser.cc" // lalr1.cc:614
+      case symbol_kind::S_mathExpr: // mathExpr
+#line 105 "whereParser.yy"
+                    { delete (yysym.value.whereNode); }
+#line 422 "whereParser.cc"
         break;
-
 
       default:
         break;
@@ -484,44 +429,45 @@ namespace ibis {
 #if YYDEBUG
   template <typename Base>
   void
-  whereParser::yy_print_ (std::ostream& yyo,
-                                     const basic_symbol<Base>& yysym) const
+  whereParser::yy_print_ (std::ostream& yyo, const basic_symbol<Base>& yysym) const
   {
     std::ostream& yyoutput = yyo;
-    YYUSE (yyoutput);
-    symbol_number_type yytype = yysym.type_get ();
-    // Avoid a (spurious) G++ 4.8 warning about "array subscript is
-    // below array bounds".
+    YY_USE (yyoutput);
     if (yysym.empty ())
-      std::abort ();
-    yyo << (yytype < yyntokens_ ? "token" : "nterm")
-        << ' ' << yytname_[yytype] << " ("
-        << yysym.location << ": ";
-    YYUSE (yytype);
-    yyo << ')';
+      yyo << "empty symbol";
+    else
+      {
+        symbol_kind_type yykind = yysym.kind ();
+        yyo << (yykind < YYNTOKENS ? "token" : "nterm")
+            << ' ' << yysym.name () << " ("
+            << yysym.location << ": ";
+        YY_USE (yykind);
+        yyo << ')';
+      }
   }
 #endif
 
-  inline
   void
-  whereParser::yypush_ (const char* m, state_type s, symbol_type& sym)
-  {
-    stack_symbol_type t (s, sym);
-    yypush_ (m, t);
-  }
-
-  inline
-  void
-  whereParser::yypush_ (const char* m, stack_symbol_type& s)
+  whereParser::yypush_ (const char* m, YY_MOVE_REF (stack_symbol_type) sym)
   {
     if (m)
-      YY_SYMBOL_PRINT (m, s);
-    yystack_.push (s);
+      YY_SYMBOL_PRINT (m, sym);
+    yystack_.push (YY_MOVE (sym));
   }
 
-  inline
   void
-  whereParser::yypop_ (unsigned int n)
+  whereParser::yypush_ (const char* m, state_type s, YY_MOVE_REF (symbol_type) sym)
+  {
+#if 201103L <= YY_CPLUSPLUS
+    yypush_ (m, stack_symbol_type (s, std::move (sym)));
+#else
+    stack_symbol_type ss (s, sym);
+    yypush_ (m, ss);
+#endif
+  }
+
+  void
+  whereParser::yypop_ (int n)
   {
     yystack_.pop (n);
   }
@@ -553,32 +499,37 @@ namespace ibis {
   }
 #endif // YYDEBUG
 
-  inline whereParser::state_type
+  whereParser::state_type
   whereParser::yy_lr_goto_state_ (state_type yystate, int yysym)
   {
-    int yyr = yypgoto_[yysym - yyntokens_] + yystate;
+    int yyr = yypgoto_[yysym - YYNTOKENS] + yystate;
     if (0 <= yyr && yyr <= yylast_ && yycheck_[yyr] == yystate)
       return yytable_[yyr];
     else
-      return yydefgoto_[yysym - yyntokens_];
+      return yydefgoto_[yysym - YYNTOKENS];
   }
 
-  inline bool
+  bool
   whereParser::yy_pact_value_is_default_ (int yyvalue)
   {
     return yyvalue == yypact_ninf_;
   }
 
-  inline bool
+  bool
   whereParser::yy_table_value_is_error_ (int yyvalue)
   {
     return yyvalue == yytable_ninf_;
   }
 
   int
+  whereParser::operator() ()
+  {
+    return parse ();
+  }
+
+  int
   whereParser::parse ()
   {
-    // State.
     int yyn;
     /// Length of the RHS of the rule being reduced.
     int yylen = 0;
@@ -596,67 +547,90 @@ namespace ibis {
     /// The return value of parse ().
     int yyresult;
 
-    // FIXME: This shoud be completely indented.  It is not yet to
-    // avoid gratuitous conflicts when merging into the master branch.
+#if YY_EXCEPTIONS
     try
+#endif // YY_EXCEPTIONS
       {
-    YYCDEBUG << "Starting parse" << std::endl;
+    YYCDEBUG << "Starting parse\n";
 
 
     // User initialization code.
-    #line 30 "whereParser.yy" // lalr1.cc:741
+#line 31 "whereParser.yy"
 { // initialize location object
     yyla.location.begin.filename = yyla.location.end.filename = &(driver.clause_);
 }
 
-#line 613 "whereParser.cc" // lalr1.cc:741
+#line 564 "whereParser.cc"
+
 
     /* Initialize the stack.  The initial state will be set in
        yynewstate, since the latter expects the semantical and the
        location values to have been already stored, initialize these
        stacks with a primary value.  */
     yystack_.clear ();
-    yypush_ (YY_NULLPTR, 0, yyla);
+    yypush_ (YY_NULLPTR, 0, YY_MOVE (yyla));
 
-    // A new symbol was pushed on the stack.
+  /*-----------------------------------------------.
+  | yynewstate -- push a new symbol on the stack.  |
+  `-----------------------------------------------*/
   yynewstate:
-    YYCDEBUG << "Entering state " << yystack_[0].state << std::endl;
+    YYCDEBUG << "Entering state " << int (yystack_[0].state) << '\n';
+    YY_STACK_PRINT ();
 
     // Accept?
     if (yystack_[0].state == yyfinal_)
-      goto yyacceptlab;
+      YYACCEPT;
 
     goto yybackup;
 
-    // Backup.
-  yybackup:
 
+  /*-----------.
+  | yybackup.  |
+  `-----------*/
+  yybackup:
     // Try to take a decision without lookahead.
-    yyn = yypact_[yystack_[0].state];
+    yyn = yypact_[+yystack_[0].state];
     if (yy_pact_value_is_default_ (yyn))
       goto yydefault;
 
     // Read a lookahead token.
     if (yyla.empty ())
       {
-        YYCDEBUG << "Reading a token: ";
+        YYCDEBUG << "Reading a token\n";
+#if YY_EXCEPTIONS
         try
+#endif // YY_EXCEPTIONS
           {
-            yyla.type = yytranslate_ (yylex (&yyla.value, &yyla.location));
+            yyla.kind_ = yytranslate_ (yylex (&yyla.value, &yyla.location));
           }
+#if YY_EXCEPTIONS
         catch (const syntax_error& yyexc)
           {
+            YYCDEBUG << "Caught exception: " << yyexc.what() << '\n';
             error (yyexc);
             goto yyerrlab1;
           }
+#endif // YY_EXCEPTIONS
       }
     YY_SYMBOL_PRINT ("Next token is", yyla);
 
+    if (yyla.kind () == symbol_kind::S_YYerror)
+    {
+      // The scanner already issued an error message, process directly
+      // to error recovery.  But do not keep the error token as
+      // lookahead, it is too special and may lead us to an endless
+      // loop in error recovery. */
+      yyla.kind_ = symbol_kind::S_YYUNDEF;
+      goto yyerrlab1;
+    }
+
     /* If the proper action on seeing token YYLA.TYPE is to reduce or
        to detect an error, take that action.  */
-    yyn += yyla.type_get ();
-    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yyla.type_get ())
-      goto yydefault;
+    yyn += yyla.kind ();
+    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yyla.kind ())
+      {
+        goto yydefault;
+      }
 
     // Reduce or error.
     yyn = yytable_[yyn];
@@ -673,26 +647,28 @@ namespace ibis {
       --yyerrstatus_;
 
     // Shift the lookahead token.
-    yypush_ ("Shifting", yyn, yyla);
+    yypush_ ("Shifting", state_type (yyn), YY_MOVE (yyla));
     goto yynewstate;
+
 
   /*-----------------------------------------------------------.
   | yydefault -- do the default action for the current state.  |
   `-----------------------------------------------------------*/
   yydefault:
-    yyn = yydefact_[yystack_[0].state];
+    yyn = yydefact_[+yystack_[0].state];
     if (yyn == 0)
       goto yyerrlab;
     goto yyreduce;
 
+
   /*-----------------------------.
-  | yyreduce -- Do a reduction.  |
+  | yyreduce -- do a reduction.  |
   `-----------------------------*/
   yyreduce:
     yylen = yyr2_[yyn];
     {
       stack_symbol_type yylhs;
-      yylhs.state = yy_lr_goto_state_(yystack_[yylen].state, yyr1_[yyn]);
+      yylhs.state = yy_lr_goto_state_ (yystack_[yylen].state, yyr1_[yyn]);
       /* If YYLEN is nonzero, implement the default value of the
          action: '$$ = $1'.  Otherwise, use the top of the stack.
 
@@ -704,21 +680,24 @@ namespace ibis {
       else
         yylhs.value = yystack_[0].value;
 
-      // Compute the default @$.
+      // Default location.
       {
-        slice<stack_symbol_type, stack_type> slice (yystack_, yylen);
-        YYLLOC_DEFAULT (yylhs.location, slice, yylen);
+        stack_type::slice range (yystack_, yylen);
+        YYLLOC_DEFAULT (yylhs.location, range, yylen);
+        yyerror_range[1].location = yylhs.location;
       }
 
       // Perform the reduction.
       YY_REDUCE_PRINT (yyn);
+#if YY_EXCEPTIONS
       try
+#endif // YY_EXCEPTIONS
         {
           switch (yyn)
             {
-  case 2:
-#line 115 "whereParser.yy" // lalr1.cc:859
-    {
+  case 2: // qexpr: qexpr "or" qexpr
+#line 116 "whereParser.yy"
+                 {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -728,12 +707,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setRight((yystack_[0].value.whereNode));
     (yylhs.value.whereNode)->setLeft((yystack_[2].value.whereNode));
 }
-#line 732 "whereParser.cc" // lalr1.cc:859
+#line 711 "whereParser.cc"
     break;
 
-  case 3:
-#line 125 "whereParser.yy" // lalr1.cc:859
-    {
+  case 3: // qexpr: qexpr "xor" qexpr
+#line 126 "whereParser.yy"
+                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -743,12 +722,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setRight((yystack_[0].value.whereNode));
     (yylhs.value.whereNode)->setLeft((yystack_[2].value.whereNode));
 }
-#line 747 "whereParser.cc" // lalr1.cc:859
+#line 726 "whereParser.cc"
     break;
 
-  case 4:
-#line 135 "whereParser.yy" // lalr1.cc:859
-    {
+  case 4: // qexpr: qexpr "and" qexpr
+#line 136 "whereParser.yy"
+                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -758,12 +737,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setRight((yystack_[0].value.whereNode));
     (yylhs.value.whereNode)->setLeft((yystack_[2].value.whereNode));
 }
-#line 762 "whereParser.cc" // lalr1.cc:859
+#line 741 "whereParser.cc"
     break;
 
-  case 5:
-#line 145 "whereParser.yy" // lalr1.cc:859
-    {
+  case 5: // qexpr: qexpr "&!" qexpr
+#line 146 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -773,12 +752,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setRight((yystack_[0].value.whereNode));
     (yylhs.value.whereNode)->setLeft((yystack_[2].value.whereNode));
 }
-#line 777 "whereParser.cc" // lalr1.cc:859
+#line 756 "whereParser.cc"
     break;
 
-  case 6:
-#line 155 "whereParser.yy" // lalr1.cc:859
-    {
+  case 6: // qexpr: "not" qexpr
+#line 156 "whereParser.yy"
+              {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- ! " << *(yystack_[0].value.whereNode);
@@ -786,20 +765,38 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExpr(ibis::qExpr::LOGICAL_NOT);
     (yylhs.value.whereNode)->setLeft((yystack_[0].value.whereNode));
 }
-#line 790 "whereParser.cc" // lalr1.cc:859
+#line 769 "whereParser.cc"
     break;
 
-  case 7:
-#line 163 "whereParser.yy" // lalr1.cc:859
-    {
+  case 7: // qexpr: '(' qexpr ')'
+#line 164 "whereParser.yy"
+                            {
     (yylhs.value.whereNode) = (yystack_[1].value.whereNode);
 }
-#line 798 "whereParser.cc" // lalr1.cc:859
+#line 777 "whereParser.cc"
     break;
 
-  case 11:
-#line 172 "whereParser.yy" // lalr1.cc:859
-    {
+  case 8: // qexpr: simpleRange
+#line 167 "whereParser.yy"
+  { (yylhs.value.whereNode) = (yystack_[0].value.whereNode); }
+#line 783 "whereParser.cc"
+    break;
+
+  case 9: // qexpr: compRange2
+#line 168 "whereParser.yy"
+  { (yylhs.value.whereNode) = (yystack_[0].value.whereNode); }
+#line 789 "whereParser.cc"
+    break;
+
+  case 10: // qexpr: compRange3
+#line 169 "whereParser.yy"
+  { (yylhs.value.whereNode) = (yystack_[0].value.whereNode); }
+#line 795 "whereParser.cc"
+    break;
+
+  case 11: // simpleRange: "exists" "name string"
+#line 173 "whereParser.yy"
+                 {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- EXISTS(" << *(yystack_[0].value.stringVal) << ')';
@@ -807,12 +804,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExists((yystack_[0].value.stringVal)->c_str());
     delete (yystack_[0].value.stringVal);
 }
-#line 811 "whereParser.cc" // lalr1.cc:859
+#line 808 "whereParser.cc"
     break;
 
-  case 12:
-#line 180 "whereParser.yy" // lalr1.cc:859
-    {
+  case 12: // simpleRange: "exists" "string literal"
+#line 181 "whereParser.yy"
+                  {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- EXISTS(" << *(yystack_[0].value.stringVal) << ')';
@@ -820,12 +817,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExists((yystack_[0].value.stringVal)->c_str());
     delete (yystack_[0].value.stringVal);
 }
-#line 824 "whereParser.cc" // lalr1.cc:859
+#line 821 "whereParser.cc"
     break;
 
-  case 13:
-#line 188 "whereParser.yy" // lalr1.cc:859
-    {
+  case 13: // simpleRange: "exists" '(' "name string" ')'
+#line 189 "whereParser.yy"
+                           {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- EXISTS(" << *(yystack_[1].value.stringVal) << ')';
@@ -833,12 +830,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExists((yystack_[1].value.stringVal)->c_str());
     delete (yystack_[1].value.stringVal);
 }
-#line 837 "whereParser.cc" // lalr1.cc:859
+#line 834 "whereParser.cc"
     break;
 
-  case 14:
-#line 196 "whereParser.yy" // lalr1.cc:859
-    {
+  case 14: // simpleRange: "exists" '(' "string literal" ')'
+#line 197 "whereParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- EXISTS(" << *(yystack_[1].value.stringVal) << ')';
@@ -846,12 +843,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExists((yystack_[1].value.stringVal)->c_str());
     delete (yystack_[1].value.stringVal);
 }
-#line 850 "whereParser.cc" // lalr1.cc:859
+#line 847 "whereParser.cc"
     break;
 
-  case 15:
-#line 204 "whereParser.yy" // lalr1.cc:859
-    {
+  case 15: // simpleRange: "name string" "in" "number sequence"
+#line 205 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " IN ("
@@ -861,12 +858,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 865 "whereParser.cc" // lalr1.cc:859
+#line 862 "whereParser.cc"
     break;
 
-  case 16:
-#line 214 "whereParser.yy" // lalr1.cc:859
-    {
+  case 16: // simpleRange: "name string" "in" '(' "floating-point number" ',' "floating-point number" ')'
+#line 215 "whereParser.yy"
+                                         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[6].value.stringVal) << " IN ("
@@ -878,12 +875,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qDiscreteRange((yystack_[6].value.stringVal)->c_str(), vals);
     delete (yystack_[6].value.stringVal);
 }
-#line 882 "whereParser.cc" // lalr1.cc:859
+#line 879 "whereParser.cc"
     break;
 
-  case 17:
-#line 226 "whereParser.yy" // lalr1.cc:859
-    {
+  case 17: // simpleRange: "name string" "in" '(' "floating-point number" ')'
+#line 227 "whereParser.yy"
+                              {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[4].value.stringVal) << " IN ("
@@ -892,24 +889,24 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qContinuousRange((yystack_[4].value.stringVal)->c_str(), ibis::qExpr::OP_EQ, (yystack_[1].value.doubleVal));
     delete (yystack_[4].value.stringVal);
 }
-#line 896 "whereParser.cc" // lalr1.cc:859
+#line 893 "whereParser.cc"
     break;
 
-  case 18:
-#line 235 "whereParser.yy" // lalr1.cc:859
-    {
+  case 18: // simpleRange: "name string" "not" "null"
+#line 236 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " NOT NULL";
 #endif
     (yylhs.value.whereNode) = new ibis::qContinuousRange((yystack_[2].value.stringVal)->c_str(), ibis::qExpr::OP_UNDEFINED, 0U);
 }
-#line 908 "whereParser.cc" // lalr1.cc:859
+#line 905 "whereParser.cc"
     break;
 
-  case 19:
-#line 242 "whereParser.yy" // lalr1.cc:859
-    {
+  case 19: // simpleRange: "name string" "not" "in" "number sequence"
+#line 243 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << " NOT IN ("
@@ -920,12 +917,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[3].value.stringVal);
 }
-#line 924 "whereParser.cc" // lalr1.cc:859
+#line 921 "whereParser.cc"
     break;
 
-  case 20:
-#line 253 "whereParser.yy" // lalr1.cc:859
-    {
+  case 20: // simpleRange: "name string" "not" "in" '(' "floating-point number" ',' "floating-point number" ')'
+#line 254 "whereParser.yy"
+                                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[7].value.stringVal) << " NOT IN ("
@@ -938,12 +935,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setLeft(new ibis::qDiscreteRange((yystack_[7].value.stringVal)->c_str(), vals));
     delete (yystack_[7].value.stringVal);
 }
-#line 942 "whereParser.cc" // lalr1.cc:859
+#line 939 "whereParser.cc"
     break;
 
-  case 21:
-#line 266 "whereParser.yy" // lalr1.cc:859
-    {
+  case 21: // simpleRange: "name string" "not" "in" '(' "floating-point number" ')'
+#line 267 "whereParser.yy"
+                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[5].value.stringVal) << " NOT IN ("
@@ -953,12 +950,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setLeft(new ibis::qContinuousRange((yystack_[5].value.stringVal)->c_str(), ibis::qExpr::OP_EQ, (yystack_[1].value.doubleVal)));
     delete (yystack_[5].value.stringVal);
 }
-#line 957 "whereParser.cc" // lalr1.cc:859
+#line 954 "whereParser.cc"
     break;
 
-  case 22:
-#line 276 "whereParser.yy" // lalr1.cc:859
-    {
+  case 22: // simpleRange: "name string" "in" "string sequence"
+#line 277 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " IN ("
@@ -968,12 +965,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 972 "whereParser.cc" // lalr1.cc:859
+#line 969 "whereParser.cc"
     break;
 
-  case 23:
-#line 286 "whereParser.yy" // lalr1.cc:859
-    {
+  case 23: // simpleRange: "name string" "in" '(' "name string" ',' "name string" ')'
+#line 287 "whereParser.yy"
+                                           {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[6].value.stringVal) << " IN ("
@@ -990,12 +987,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 994 "whereParser.cc" // lalr1.cc:859
+#line 991 "whereParser.cc"
     break;
 
-  case 24:
-#line 303 "whereParser.yy" // lalr1.cc:859
-    {
+  case 24: // simpleRange: "name string" "in" '(' "string literal" ',' "name string" ')'
+#line 304 "whereParser.yy"
+                                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[6].value.stringVal) << " IN ("
@@ -1012,12 +1009,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1016 "whereParser.cc" // lalr1.cc:859
+#line 1013 "whereParser.cc"
     break;
 
-  case 25:
-#line 320 "whereParser.yy" // lalr1.cc:859
-    {
+  case 25: // simpleRange: "name string" "in" '(' "name string" ',' "string literal" ')'
+#line 321 "whereParser.yy"
+                                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[6].value.stringVal) << " IN ("
@@ -1034,12 +1031,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1038 "whereParser.cc" // lalr1.cc:859
+#line 1035 "whereParser.cc"
     break;
 
-  case 26:
-#line 337 "whereParser.yy" // lalr1.cc:859
-    {
+  case 26: // simpleRange: "name string" "in" '(' "string literal" ',' "string literal" ')'
+#line 338 "whereParser.yy"
+                                         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[6].value.stringVal) << " IN ("
@@ -1056,12 +1053,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1060 "whereParser.cc" // lalr1.cc:859
+#line 1057 "whereParser.cc"
     break;
 
-  case 27:
-#line 354 "whereParser.yy" // lalr1.cc:859
-    {
+  case 27: // simpleRange: "name string" "in" '(' "name string" ')'
+#line 355 "whereParser.yy"
+                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[4].value.stringVal) << " IN ("
@@ -1075,12 +1072,12 @@ namespace ibis {
     delete (yystack_[1].value.stringVal);
     delete (yystack_[4].value.stringVal);
 }
-#line 1079 "whereParser.cc" // lalr1.cc:859
+#line 1076 "whereParser.cc"
     break;
 
-  case 28:
-#line 368 "whereParser.yy" // lalr1.cc:859
-    {
+  case 28: // simpleRange: "name string" "in" '(' "string literal" ')'
+#line 369 "whereParser.yy"
+                              {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[4].value.stringVal) << " IN ("
@@ -1094,12 +1091,12 @@ namespace ibis {
     delete (yystack_[1].value.stringVal);
     delete (yystack_[4].value.stringVal);
 }
-#line 1098 "whereParser.cc" // lalr1.cc:859
+#line 1095 "whereParser.cc"
     break;
 
-  case 29:
-#line 382 "whereParser.yy" // lalr1.cc:859
-    {
+  case 29: // simpleRange: "name string" "like" "name string"
+#line 383 "whereParser.yy"
+                         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " LIKE "
@@ -1109,12 +1106,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1113 "whereParser.cc" // lalr1.cc:859
+#line 1110 "whereParser.cc"
     break;
 
-  case 30:
-#line 392 "whereParser.yy" // lalr1.cc:859
-    {
+  case 30: // simpleRange: "name string" "like" "string literal"
+#line 393 "whereParser.yy"
+                        {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " LIKE "
@@ -1124,12 +1121,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1128 "whereParser.cc" // lalr1.cc:859
+#line 1125 "whereParser.cc"
     break;
 
-  case 31:
-#line 402 "whereParser.yy" // lalr1.cc:859
-    {
+  case 31: // simpleRange: "name string" "not" "in" "string sequence"
+#line 403 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << " NOT IN ("
@@ -1140,12 +1137,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[3].value.stringVal);
 }
-#line 1144 "whereParser.cc" // lalr1.cc:859
+#line 1141 "whereParser.cc"
     break;
 
-  case 32:
-#line 413 "whereParser.yy" // lalr1.cc:859
-    {
+  case 32: // simpleRange: "name string" "not" "in" '(' "name string" ',' "name string" ')'
+#line 414 "whereParser.yy"
+                                                 {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[7].value.stringVal) << " NOT IN ("
@@ -1163,12 +1160,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[7].value.stringVal);
 }
-#line 1167 "whereParser.cc" // lalr1.cc:859
+#line 1164 "whereParser.cc"
     break;
 
-  case 33:
-#line 431 "whereParser.yy" // lalr1.cc:859
-    {
+  case 33: // simpleRange: "name string" "not" "in" '(' "string literal" ',' "name string" ')'
+#line 432 "whereParser.yy"
+                                                {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[7].value.stringVal) << " NOT IN ("
@@ -1186,12 +1183,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[7].value.stringVal);
 }
-#line 1190 "whereParser.cc" // lalr1.cc:859
+#line 1187 "whereParser.cc"
     break;
 
-  case 34:
-#line 449 "whereParser.yy" // lalr1.cc:859
-    {
+  case 34: // simpleRange: "name string" "not" "in" '(' "name string" ',' "string literal" ')'
+#line 450 "whereParser.yy"
+                                                {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[7].value.stringVal) << " NOT IN ("
@@ -1209,12 +1206,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[7].value.stringVal);
 }
-#line 1213 "whereParser.cc" // lalr1.cc:859
+#line 1210 "whereParser.cc"
     break;
 
-  case 35:
-#line 467 "whereParser.yy" // lalr1.cc:859
-    {
+  case 35: // simpleRange: "name string" "not" "in" '(' "string literal" ',' "string literal" ')'
+#line 468 "whereParser.yy"
+                                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[7].value.stringVal) << " NOT IN ("
@@ -1232,12 +1229,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[7].value.stringVal);
 }
-#line 1236 "whereParser.cc" // lalr1.cc:859
+#line 1233 "whereParser.cc"
     break;
 
-  case 36:
-#line 485 "whereParser.yy" // lalr1.cc:859
-    {
+  case 36: // simpleRange: "name string" "not" "in" '(' "name string" ')'
+#line 486 "whereParser.yy"
+                                     {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[5].value.stringVal) << " NOT IN ("
@@ -1252,12 +1249,12 @@ namespace ibis {
     delete (yystack_[1].value.stringVal);
     delete (yystack_[5].value.stringVal);
 }
-#line 1256 "whereParser.cc" // lalr1.cc:859
+#line 1253 "whereParser.cc"
     break;
 
-  case 37:
-#line 500 "whereParser.yy" // lalr1.cc:859
-    {
+  case 37: // simpleRange: "name string" "not" "in" '(' "string literal" ')'
+#line 501 "whereParser.yy"
+                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[5].value.stringVal) << " NOT IN ("
@@ -1272,12 +1269,12 @@ namespace ibis {
     delete (yystack_[1].value.stringVal);
     delete (yystack_[5].value.stringVal);
 }
-#line 1276 "whereParser.cc" // lalr1.cc:859
+#line 1273 "whereParser.cc"
     break;
 
-  case 38:
-#line 515 "whereParser.yy" // lalr1.cc:859
-    {
+  case 38: // simpleRange: "name string" "in" "signed integer sequence"
+#line 516 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " in ("
@@ -1287,12 +1284,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1291 "whereParser.cc" // lalr1.cc:859
+#line 1288 "whereParser.cc"
     break;
 
-  case 39:
-#line 525 "whereParser.yy" // lalr1.cc:859
-    {
+  case 39: // simpleRange: "name string" "not" "in" "signed integer sequence"
+#line 526 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << " not in ("
@@ -1303,12 +1300,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[3].value.stringVal);
 }
-#line 1307 "whereParser.cc" // lalr1.cc:859
+#line 1304 "whereParser.cc"
     break;
 
-  case 40:
-#line 536 "whereParser.yy" // lalr1.cc:859
-    {
+  case 40: // simpleRange: "name string" "in" "unsigned integer sequence"
+#line 537 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " in ("
@@ -1318,12 +1315,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1322 "whereParser.cc" // lalr1.cc:859
+#line 1319 "whereParser.cc"
     break;
 
-  case 41:
-#line 546 "whereParser.yy" // lalr1.cc:859
-    {
+  case 41: // simpleRange: "name string" "not" "in" "unsigned integer sequence"
+#line 547 "whereParser.yy"
+                             {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << " not in ("
@@ -1334,12 +1331,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[3].value.stringVal);
 }
-#line 1338 "whereParser.cc" // lalr1.cc:859
+#line 1335 "whereParser.cc"
     break;
 
-  case 42:
-#line 557 "whereParser.yy" // lalr1.cc:859
-    {
+  case 42: // simpleRange: "name string" "contains" "name string"
+#line 558 "whereParser.yy"
+                             {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal)
@@ -1349,12 +1346,12 @@ namespace ibis {
     delete (yystack_[2].value.stringVal);
     delete (yystack_[0].value.stringVal);
 }
-#line 1353 "whereParser.cc" // lalr1.cc:859
+#line 1350 "whereParser.cc"
     break;
 
-  case 43:
-#line 567 "whereParser.yy" // lalr1.cc:859
-    {
+  case 43: // simpleRange: "name string" "contains" "string literal"
+#line 568 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[2].value.stringVal)
@@ -1364,12 +1361,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1368 "whereParser.cc" // lalr1.cc:859
+#line 1365 "whereParser.cc"
     break;
 
-  case 44:
-#line 577 "whereParser.yy" // lalr1.cc:859
-    {
+  case 44: // simpleRange: "name string" "contains" '(' "name string" ')'
+#line 578 "whereParser.yy"
+                                     {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[4].value.stringVal)
@@ -1379,12 +1376,12 @@ namespace ibis {
     delete (yystack_[4].value.stringVal);
     delete (yystack_[1].value.stringVal);
 }
-#line 1383 "whereParser.cc" // lalr1.cc:859
+#line 1380 "whereParser.cc"
     break;
 
-  case 45:
-#line 587 "whereParser.yy" // lalr1.cc:859
-    {
+  case 45: // simpleRange: "name string" "contains" '(' "string literal" ')'
+#line 588 "whereParser.yy"
+                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[4].value.stringVal)
@@ -1394,12 +1391,12 @@ namespace ibis {
     delete (yystack_[1].value.stringVal);
     delete (yystack_[4].value.stringVal);
 }
-#line 1398 "whereParser.cc" // lalr1.cc:859
+#line 1395 "whereParser.cc"
     break;
 
-  case 46:
-#line 597 "whereParser.yy" // lalr1.cc:859
-    {
+  case 46: // simpleRange: "name string" "contains" '(' "string literal" ',' "string literal" ')'
+#line 598 "whereParser.yy"
+                                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[6].value.stringVal)
@@ -1410,12 +1407,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1414 "whereParser.cc" // lalr1.cc:859
+#line 1411 "whereParser.cc"
     break;
 
-  case 47:
-#line 608 "whereParser.yy" // lalr1.cc:859
-    {
+  case 47: // simpleRange: "name string" "contains" '(' "string literal" ',' "name string" ')'
+#line 609 "whereParser.yy"
+                                                {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[6].value.stringVal)
@@ -1426,12 +1423,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1430 "whereParser.cc" // lalr1.cc:859
+#line 1427 "whereParser.cc"
     break;
 
-  case 48:
-#line 619 "whereParser.yy" // lalr1.cc:859
-    {
+  case 48: // simpleRange: "name string" "contains" '(' "name string" ',' "string literal" ')'
+#line 620 "whereParser.yy"
+                                                {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[6].value.stringVal)
@@ -1442,12 +1439,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1446 "whereParser.cc" // lalr1.cc:859
+#line 1443 "whereParser.cc"
     break;
 
-  case 49:
-#line 630 "whereParser.yy" // lalr1.cc:859
-    {
+  case 49: // simpleRange: "name string" "contains" '(' "name string" ',' "name string" ')'
+#line 631 "whereParser.yy"
+                                                 {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[6].value.stringVal)
@@ -1458,12 +1455,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     delete (yystack_[6].value.stringVal);
 }
-#line 1462 "whereParser.cc" // lalr1.cc:859
+#line 1459 "whereParser.cc"
     break;
 
-  case 50:
-#line 641 "whereParser.yy" // lalr1.cc:859
-    {
+  case 50: // simpleRange: "name string" "contains" "string sequence"
+#line 642 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << (yystack_[2].value.stringVal)
@@ -1473,12 +1470,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1477 "whereParser.cc" // lalr1.cc:859
+#line 1474 "whereParser.cc"
     break;
 
-  case 51:
-#line 651 "whereParser.yy" // lalr1.cc:859
-    {
+  case 51: // simpleRange: "any" '(' "name string" ')' "==" "floating-point number"
+#line 652 "whereParser.yy"
+                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- ANY(" << *(yystack_[3].value.stringVal) << ") = "
@@ -1487,12 +1484,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qAnyAny((yystack_[3].value.stringVal)->c_str(), (yystack_[0].value.doubleVal));
     delete (yystack_[3].value.stringVal);
 }
-#line 1491 "whereParser.cc" // lalr1.cc:859
+#line 1488 "whereParser.cc"
     break;
 
-  case 52:
-#line 660 "whereParser.yy" // lalr1.cc:859
-    {
+  case 52: // simpleRange: "any" '(' "name string" ')' "in" "number sequence"
+#line 661 "whereParser.yy"
+                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- ANY(" << *(yystack_[3].value.stringVal) << ") = "
@@ -1502,12 +1499,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[3].value.stringVal);
 }
-#line 1506 "whereParser.cc" // lalr1.cc:859
+#line 1503 "whereParser.cc"
     break;
 
-  case 53:
-#line 670 "whereParser.yy" // lalr1.cc:859
-    {
+  case 53: // simpleRange: "name string" "==" "(64-bit) integer value"
+#line 671 "whereParser.yy"
+                     {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " = " << *(yystack_[0].value.int64Val);
@@ -1515,12 +1512,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qIntHod((yystack_[2].value.stringVal)->c_str(), (yystack_[0].value.int64Val));
     delete (yystack_[2].value.stringVal);
 }
-#line 1519 "whereParser.cc" // lalr1.cc:859
+#line 1516 "whereParser.cc"
     break;
 
-  case 54:
-#line 678 "whereParser.yy" // lalr1.cc:859
-    {
+  case 54: // simpleRange: "name string" "!=" "(64-bit) integer value"
+#line 679 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " != " << *(yystack_[0].value.int64Val);
@@ -1529,12 +1526,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setLeft(new ibis::qIntHod((yystack_[2].value.stringVal)->c_str(), (yystack_[0].value.int64Val)));
     delete (yystack_[2].value.stringVal);
 }
-#line 1533 "whereParser.cc" // lalr1.cc:859
+#line 1530 "whereParser.cc"
     break;
 
-  case 55:
-#line 687 "whereParser.yy" // lalr1.cc:859
-    {
+  case 55: // simpleRange: "name string" "==" "unsigned (64-bit) integer value"
+#line 688 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " = " << *(yystack_[0].value.uint64Val);
@@ -1542,12 +1539,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qUIntHod((yystack_[2].value.stringVal)->c_str(), (yystack_[0].value.uint64Val));
     delete (yystack_[2].value.stringVal);
 }
-#line 1546 "whereParser.cc" // lalr1.cc:859
+#line 1543 "whereParser.cc"
     break;
 
-  case 56:
-#line 695 "whereParser.yy" // lalr1.cc:859
-    {
+  case 56: // simpleRange: "name string" "!=" "unsigned (64-bit) integer value"
+#line 696 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " != " << *(yystack_[0].value.uint64Val);
@@ -1556,12 +1553,12 @@ namespace ibis {
     (yylhs.value.whereNode)->setLeft(new ibis::qUIntHod((yystack_[2].value.stringVal)->c_str(), (yystack_[0].value.uint64Val)));
     delete (yystack_[2].value.stringVal);
 }
-#line 1560 "whereParser.cc" // lalr1.cc:859
+#line 1557 "whereParser.cc"
     break;
 
-  case 57:
-#line 704 "whereParser.yy" // lalr1.cc:859
-    {
+  case 57: // simpleRange: "string literal" "==" "name string"
+#line 705 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[0].value.stringVal) << " = "
@@ -1571,12 +1568,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1575 "whereParser.cc" // lalr1.cc:859
+#line 1572 "whereParser.cc"
     break;
 
-  case 58:
-#line 714 "whereParser.yy" // lalr1.cc:859
-    {
+  case 58: // simpleRange: "string literal" "!=" "name string"
+#line 715 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[0].value.stringVal) << " = "
@@ -1587,12 +1584,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1591 "whereParser.cc" // lalr1.cc:859
+#line 1588 "whereParser.cc"
     break;
 
-  case 59:
-#line 725 "whereParser.yy" // lalr1.cc:859
-    {
+  case 59: // simpleRange: "name string" "==" "string literal"
+#line 726 "whereParser.yy"
+                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " = "
@@ -1602,12 +1599,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1606 "whereParser.cc" // lalr1.cc:859
+#line 1603 "whereParser.cc"
     break;
 
-  case 60:
-#line 735 "whereParser.yy" // lalr1.cc:859
-    {
+  case 60: // simpleRange: "name string" "!=" "string literal"
+#line 736 "whereParser.yy"
+                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.stringVal) << " != "
@@ -1618,12 +1615,12 @@ namespace ibis {
     delete (yystack_[0].value.stringVal);
     delete (yystack_[2].value.stringVal);
 }
-#line 1622 "whereParser.cc" // lalr1.cc:859
+#line 1619 "whereParser.cc"
     break;
 
-  case 61:
-#line 746 "whereParser.yy" // lalr1.cc:859
-    {
+  case 61: // simpleRange: "name string" "==" mathExpr
+#line 747 "whereParser.yy"
+                        {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
@@ -1640,12 +1637,12 @@ namespace ibis {
     }
     delete (yystack_[2].value.stringVal);
 }
-#line 1644 "whereParser.cc" // lalr1.cc:859
+#line 1641 "whereParser.cc"
     break;
 
-  case 62:
-#line 763 "whereParser.yy" // lalr1.cc:859
-    {
+  case 62: // simpleRange: "name string" "!=" mathExpr
+#line 764 "whereParser.yy"
+                         {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
@@ -1665,12 +1662,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExpr(ibis::qExpr::LOGICAL_NOT);
     (yylhs.value.whereNode)->setLeft(tmp);
 }
-#line 1669 "whereParser.cc" // lalr1.cc:859
+#line 1666 "whereParser.cc"
     break;
 
-  case 63:
-#line 786 "whereParser.yy" // lalr1.cc:859
-    {
+  case 63: // compRange2: mathExpr "==" mathExpr
+#line 787 "whereParser.yy"
+                       {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1680,12 +1677,12 @@ namespace ibis {
 #endif
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_EQ, me2);
 }
-#line 1684 "whereParser.cc" // lalr1.cc:859
+#line 1681 "whereParser.cc"
     break;
 
-  case 64:
-#line 796 "whereParser.yy" // lalr1.cc:859
-    {
+  case 64: // compRange2: mathExpr "!=" mathExpr
+#line 797 "whereParser.yy"
+                          {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1696,12 +1693,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::qExpr(ibis::qExpr::LOGICAL_NOT);
     (yylhs.value.whereNode)->setLeft(new ibis::compRange(me1, ibis::qExpr::OP_EQ, me2));
 }
-#line 1700 "whereParser.cc" // lalr1.cc:859
+#line 1697 "whereParser.cc"
     break;
 
-  case 65:
-#line 807 "whereParser.yy" // lalr1.cc:859
-    {
+  case 65: // compRange2: mathExpr "<" mathExpr
+#line 808 "whereParser.yy"
+                         {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1711,12 +1708,12 @@ namespace ibis {
 #endif
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LT, me2);
 }
-#line 1715 "whereParser.cc" // lalr1.cc:859
+#line 1712 "whereParser.cc"
     break;
 
-  case 66:
-#line 817 "whereParser.yy" // lalr1.cc:859
-    {
+  case 66: // compRange2: mathExpr "<=" mathExpr
+#line 818 "whereParser.yy"
+                         {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1726,12 +1723,12 @@ namespace ibis {
 #endif
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LE, me2);
 }
-#line 1730 "whereParser.cc" // lalr1.cc:859
+#line 1727 "whereParser.cc"
     break;
 
-  case 67:
-#line 827 "whereParser.yy" // lalr1.cc:859
-    {
+  case 67: // compRange2: mathExpr ">" mathExpr
+#line 828 "whereParser.yy"
+                         {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1741,12 +1738,12 @@ namespace ibis {
 #endif
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_GT, me2);
 }
-#line 1745 "whereParser.cc" // lalr1.cc:859
+#line 1742 "whereParser.cc"
     break;
 
-  case 68:
-#line 837 "whereParser.yy" // lalr1.cc:859
-    {
+  case 68: // compRange2: mathExpr ">=" mathExpr
+#line 838 "whereParser.yy"
+                         {
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
 #if defined(DEBUG) && DEBUG + 0 > 1
@@ -1756,12 +1753,12 @@ namespace ibis {
 #endif
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_GE, me2);
 }
-#line 1760 "whereParser.cc" // lalr1.cc:859
+#line 1757 "whereParser.cc"
     break;
 
-  case 69:
-#line 899 "whereParser.yy" // lalr1.cc:859
-    {
+  case 69: // compRange3: mathExpr "<" mathExpr "<" mathExpr
+#line 900 "whereParser.yy"
+                                     {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1773,12 +1770,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LT, me2,
 			     ibis::qExpr::OP_LT, me3);
 }
-#line 1777 "whereParser.cc" // lalr1.cc:859
+#line 1774 "whereParser.cc"
     break;
 
-  case 70:
-#line 911 "whereParser.yy" // lalr1.cc:859
-    {
+  case 70: // compRange3: mathExpr "<" mathExpr "<=" mathExpr
+#line 912 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1790,12 +1787,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LT, me2,
 			     ibis::qExpr::OP_LE, me3);
 }
-#line 1794 "whereParser.cc" // lalr1.cc:859
+#line 1791 "whereParser.cc"
     break;
 
-  case 71:
-#line 923 "whereParser.yy" // lalr1.cc:859
-    {
+  case 71: // compRange3: mathExpr "<=" mathExpr "<" mathExpr
+#line 924 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1807,12 +1804,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LE, me2,
 			     ibis::qExpr::OP_LT, me3);
 }
-#line 1811 "whereParser.cc" // lalr1.cc:859
+#line 1808 "whereParser.cc"
     break;
 
-  case 72:
-#line 935 "whereParser.yy" // lalr1.cc:859
-    {
+  case 72: // compRange3: mathExpr "<=" mathExpr "<=" mathExpr
+#line 936 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1824,12 +1821,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me1, ibis::qExpr::OP_LE, me2,
 			     ibis::qExpr::OP_LE, me3);
 }
-#line 1828 "whereParser.cc" // lalr1.cc:859
+#line 1825 "whereParser.cc"
     break;
 
-  case 73:
-#line 947 "whereParser.yy" // lalr1.cc:859
-    {
+  case 73: // compRange3: mathExpr ">" mathExpr ">" mathExpr
+#line 948 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1841,12 +1838,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me3, ibis::qExpr::OP_LT, me2,
 			     ibis::qExpr::OP_LT, me1);
 }
-#line 1845 "whereParser.cc" // lalr1.cc:859
+#line 1842 "whereParser.cc"
     break;
 
-  case 74:
-#line 959 "whereParser.yy" // lalr1.cc:859
-    {
+  case 74: // compRange3: mathExpr ">" mathExpr ">=" mathExpr
+#line 960 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1858,12 +1855,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me3, ibis::qExpr::OP_LE, me2,
 			     ibis::qExpr::OP_LT, me1);
 }
-#line 1862 "whereParser.cc" // lalr1.cc:859
+#line 1859 "whereParser.cc"
     break;
 
-  case 75:
-#line 971 "whereParser.yy" // lalr1.cc:859
-    {
+  case 75: // compRange3: mathExpr ">=" mathExpr ">" mathExpr
+#line 972 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1875,12 +1872,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me3, ibis::qExpr::OP_LT, me2,
 			     ibis::qExpr::OP_LE, me1);
 }
-#line 1879 "whereParser.cc" // lalr1.cc:859
+#line 1876 "whereParser.cc"
     break;
 
-  case 76:
-#line 983 "whereParser.yy" // lalr1.cc:859
-    {
+  case 76: // compRange3: mathExpr ">=" mathExpr ">=" mathExpr
+#line 984 "whereParser.yy"
+                                       {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1892,12 +1889,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me3, ibis::qExpr::OP_LE, me2,
 			     ibis::qExpr::OP_LE, me1);
 }
-#line 1896 "whereParser.cc" // lalr1.cc:859
+#line 1893 "whereParser.cc"
     break;
 
-  case 77:
-#line 995 "whereParser.yy" // lalr1.cc:859
-    {
+  case 77: // compRange3: mathExpr "between" mathExpr "and" mathExpr
+#line 996 "whereParser.yy"
+                                             {
     ibis::math::term *me3 = static_cast<ibis::math::term*>((yystack_[0].value.whereNode));
     ibis::math::term *me2 = static_cast<ibis::math::term*>((yystack_[2].value.whereNode));
     ibis::math::term *me1 = static_cast<ibis::math::term*>((yystack_[4].value.whereNode));
@@ -1909,12 +1906,12 @@ namespace ibis {
     (yylhs.value.whereNode) = new ibis::compRange(me2, ibis::qExpr::OP_LE, me1,
 			     ibis::qExpr::OP_LE, me3);
 }
-#line 1913 "whereParser.cc" // lalr1.cc:859
+#line 1910 "whereParser.cc"
     break;
 
-  case 78:
-#line 1010 "whereParser.yy" // lalr1.cc:859
-    {
+  case 78: // mathExpr: mathExpr "+" mathExpr
+#line 1011 "whereParser.yy"
+                        {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -1926,12 +1923,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 1930 "whereParser.cc" // lalr1.cc:859
+#line 1927 "whereParser.cc"
     break;
 
-  case 79:
-#line 1022 "whereParser.yy" // lalr1.cc:859
-    {
+  case 79: // mathExpr: mathExpr "-" mathExpr
+#line 1023 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -1943,12 +1940,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 1947 "whereParser.cc" // lalr1.cc:859
+#line 1944 "whereParser.cc"
     break;
 
-  case 80:
-#line 1034 "whereParser.yy" // lalr1.cc:859
-    {
+  case 80: // mathExpr: mathExpr "*" mathExpr
+#line 1035 "whereParser.yy"
+                           {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -1960,12 +1957,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 1964 "whereParser.cc" // lalr1.cc:859
+#line 1961 "whereParser.cc"
     break;
 
-  case 81:
-#line 1046 "whereParser.yy" // lalr1.cc:859
-    {
+  case 81: // mathExpr: mathExpr "/" mathExpr
+#line 1047 "whereParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -1977,12 +1974,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 1981 "whereParser.cc" // lalr1.cc:859
+#line 1978 "whereParser.cc"
     break;
 
-  case 82:
-#line 1058 "whereParser.yy" // lalr1.cc:859
-    {
+  case 82: // mathExpr: mathExpr "%" mathExpr
+#line 1059 "whereParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -1994,12 +1991,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 1998 "whereParser.cc" // lalr1.cc:859
+#line 1995 "whereParser.cc"
     break;
 
-  case 83:
-#line 1070 "whereParser.yy" // lalr1.cc:859
-    {
+  case 83: // mathExpr: mathExpr "**" mathExpr
+#line 1071 "whereParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -2011,12 +2008,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 2015 "whereParser.cc" // lalr1.cc:859
+#line 2012 "whereParser.cc"
     break;
 
-  case 84:
-#line 1082 "whereParser.yy" // lalr1.cc:859
-    {
+  case 84: // mathExpr: mathExpr "&" mathExpr
+#line 1083 "whereParser.yy"
+                             {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -2028,12 +2025,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 2032 "whereParser.cc" // lalr1.cc:859
+#line 2029 "whereParser.cc"
     break;
 
-  case 85:
-#line 1094 "whereParser.yy" // lalr1.cc:859
-    {
+  case 85: // mathExpr: mathExpr "|" mathExpr
+#line 1095 "whereParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.whereNode)
@@ -2045,12 +2042,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 2049 "whereParser.cc" // lalr1.cc:859
+#line 2046 "whereParser.cc"
     break;
 
-  case 86:
-#line 1106 "whereParser.yy" // lalr1.cc:859
-    {
+  case 86: // mathExpr: "name string" '(' mathExpr ')'
+#line 1107 "whereParser.yy"
+                                      {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << "("
@@ -2062,12 +2059,12 @@ namespace ibis {
     fun->setLeft((yystack_[1].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
 }
-#line 2066 "whereParser.cc" // lalr1.cc:859
+#line 2063 "whereParser.cc"
     break;
 
-  case 87:
-#line 1118 "whereParser.yy" // lalr1.cc:859
-    {
+  case 87: // mathExpr: "name string" '(' mathExpr ',' mathExpr ')'
+#line 1119 "whereParser.yy"
+                                                   {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[5].value.stringVal) << "("
@@ -2080,12 +2077,12 @@ namespace ibis {
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
     delete (yystack_[5].value.stringVal);
 }
-#line 2084 "whereParser.cc" // lalr1.cc:859
+#line 2081 "whereParser.cc"
     break;
 
-  case 88:
-#line 1131 "whereParser.yy" // lalr1.cc:859
-    {
+  case 88: // mathExpr: "FROM_UNIXTIME_LOCAL" '(' mathExpr ',' "string literal" ')'
+#line 1132 "whereParser.yy"
+                                                  {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FROM_UNIXTIME_LOCAL("
@@ -2098,12 +2095,12 @@ namespace ibis {
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
     delete (yystack_[1].value.stringVal);
 }
-#line 2102 "whereParser.cc" // lalr1.cc:859
+#line 2099 "whereParser.cc"
     break;
 
-  case 89:
-#line 1144 "whereParser.yy" // lalr1.cc:859
-    {
+  case 89: // mathExpr: "FROM_UNIXTIME_GMT" '(' mathExpr ',' "string literal" ')'
+#line 1145 "whereParser.yy"
+                                                {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FROM_UNIXTIME_GMT("
@@ -2117,12 +2114,12 @@ namespace ibis {
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
     delete (yystack_[1].value.stringVal);
 }
-#line 2121 "whereParser.cc" // lalr1.cc:859
+#line 2118 "whereParser.cc"
     break;
 
-  case 90:
-#line 1158 "whereParser.yy" // lalr1.cc:859
-    {
+  case 90: // mathExpr: "ISO_TO_UNIXTIME_LOCAL" '(' mathExpr ')'
+#line 1159 "whereParser.yy"
+                                         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- ISO_TO_UNIXTIME_LOCAL("
@@ -2135,12 +2132,12 @@ namespace ibis {
     fun->setLeft((yystack_[1].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
 }
-#line 2139 "whereParser.cc" // lalr1.cc:859
+#line 2136 "whereParser.cc"
     break;
 
-  case 91:
-#line 1171 "whereParser.yy" // lalr1.cc:859
-    {
+  case 91: // mathExpr: "ISO_TO_UNIXTIME_GMT" '(' mathExpr ')'
+#line 1172 "whereParser.yy"
+                                       {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- ISO_TO_UNIXTIME_GMT("
@@ -2153,12 +2150,12 @@ namespace ibis {
     fun->setLeft((yystack_[1].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(fun);
 }
-#line 2157 "whereParser.cc" // lalr1.cc:859
+#line 2154 "whereParser.cc"
     break;
 
-  case 92:
-#line 1184 "whereParser.yy" // lalr1.cc:859
-    {
+  case 92: // mathExpr: "TO_UNIXTIME_LOCAL" '(' "string literal" ',' "string literal" ')'
+#line 1185 "whereParser.yy"
+                                              {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- TO_UNIXTIME_LOCAL("
@@ -2199,12 +2196,12 @@ namespace ibis {
     throw "No strptime to parse string value in TO_UNIXTIME_LOCAL";
 #endif
 }
-#line 2203 "whereParser.cc" // lalr1.cc:859
+#line 2200 "whereParser.cc"
     break;
 
-  case 93:
-#line 1225 "whereParser.yy" // lalr1.cc:859
-    {
+  case 93: // mathExpr: "TO_UNIXTIME_GMT" '(' "string literal" ',' "string literal" ')'
+#line 1226 "whereParser.yy"
+                                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- TO_UNIXTIME_GMT("
@@ -2241,12 +2238,12 @@ namespace ibis {
     throw "No strptime to parse string value in TO_UNIXTIME_GMT";
 #endif
 }
-#line 2245 "whereParser.cc" // lalr1.cc:859
+#line 2242 "whereParser.cc"
     break;
 
-  case 94:
-#line 1262 "whereParser.yy" // lalr1.cc:859
-    {
+  case 94: // mathExpr: "-" mathExpr
+#line 1263 "whereParser.yy"
+                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- - " << *(yystack_[0].value.whereNode);
@@ -2256,28 +2253,28 @@ namespace ibis {
     opr->setRight((yystack_[0].value.whereNode));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(opr);
 }
-#line 2260 "whereParser.cc" // lalr1.cc:859
+#line 2257 "whereParser.cc"
     break;
 
-  case 95:
-#line 1272 "whereParser.yy" // lalr1.cc:859
-    {
+  case 95: // mathExpr: "+" mathExpr
+#line 1273 "whereParser.yy"
+                             {
     (yylhs.value.whereNode) = (yystack_[0].value.whereNode);
 }
-#line 2268 "whereParser.cc" // lalr1.cc:859
+#line 2265 "whereParser.cc"
     break;
 
-  case 96:
-#line 1275 "whereParser.yy" // lalr1.cc:859
-    {
+  case 96: // mathExpr: '(' mathExpr ')'
+#line 1276 "whereParser.yy"
+                   {
     (yylhs.value.whereNode) = (yystack_[1].value.whereNode);
 }
-#line 2276 "whereParser.cc" // lalr1.cc:859
+#line 2273 "whereParser.cc"
     break;
 
-  case 97:
-#line 1278 "whereParser.yy" // lalr1.cc:859
-    {
+  case 97: // mathExpr: "name string"
+#line 1279 "whereParser.yy"
+          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " got a variable name " << *(yystack_[0].value.stringVal);
@@ -2287,12 +2284,12 @@ namespace ibis {
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(var);
     delete (yystack_[0].value.stringVal);
 }
-#line 2291 "whereParser.cc" // lalr1.cc:859
+#line 2288 "whereParser.cc"
     break;
 
-  case 98:
-#line 1288 "whereParser.yy" // lalr1.cc:859
-    {
+  case 98: // mathExpr: "floating-point number"
+#line 1289 "whereParser.yy"
+         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " got a number " << (yystack_[0].value.doubleVal);
@@ -2300,45 +2297,49 @@ namespace ibis {
     ibis::math::number *num = new ibis::math::number((yystack_[0].value.doubleVal));
     (yylhs.value.whereNode) = static_cast<ibis::qExpr*>(num);
 }
-#line 2304 "whereParser.cc" // lalr1.cc:859
+#line 2301 "whereParser.cc"
     break;
 
-  case 99:
-#line 1298 "whereParser.yy" // lalr1.cc:859
-    { /* pass qexpr to the driver */
+  case 99: // START: qexpr "end of input"
+#line 1299 "whereParser.yy"
+                  { /* pass qexpr to the driver */
     driver.expr_ = (yystack_[1].value.whereNode);
 }
-#line 2312 "whereParser.cc" // lalr1.cc:859
+#line 2309 "whereParser.cc"
     break;
 
-  case 100:
-#line 1301 "whereParser.yy" // lalr1.cc:859
-    { /* pass qexpr to the driver */
+  case 100: // START: qexpr ';'
+#line 1302 "whereParser.yy"
+            { /* pass qexpr to the driver */
     driver.expr_ = (yystack_[1].value.whereNode);
 }
-#line 2320 "whereParser.cc" // lalr1.cc:859
+#line 2317 "whereParser.cc"
     break;
 
 
-#line 2324 "whereParser.cc" // lalr1.cc:859
+#line 2321 "whereParser.cc"
+
             default:
               break;
             }
         }
+#if YY_EXCEPTIONS
       catch (const syntax_error& yyexc)
         {
+          YYCDEBUG << "Caught exception: " << yyexc.what() << '\n';
           error (yyexc);
           YYERROR;
         }
+#endif // YY_EXCEPTIONS
       YY_SYMBOL_PRINT ("-> $$ =", yylhs);
       yypop_ (yylen);
       yylen = 0;
-      YY_STACK_PRINT ();
 
       // Shift the result of the reduction.
-      yypush_ (YY_NULLPTR, yylhs);
+      yypush_ (YY_NULLPTR, YY_MOVE (yylhs));
     }
     goto yynewstate;
+
 
   /*--------------------------------------.
   | yyerrlab -- here on detecting error.  |
@@ -2348,7 +2349,9 @@ namespace ibis {
     if (!yyerrstatus_)
       {
         ++yynerrs_;
-        error (yyla.location, yysyntax_error_ (yystack_[0].state, yyla));
+        context yyctx (*this, yyla);
+        std::string msg = yysyntax_error_ (yyctx);
+        error (yyla.location, YY_MOVE (msg));
       }
 
 
@@ -2359,7 +2362,7 @@ namespace ibis {
            error, discard it.  */
 
         // Return failure if at end of input.
-        if (yyla.type_get () == yyeof_)
+        if (yyla.kind () == symbol_kind::S_YYEOF)
           YYABORT;
         else if (!yyla.empty ())
           {
@@ -2376,69 +2379,81 @@ namespace ibis {
   | yyerrorlab -- error raised explicitly by YYERROR.  |
   `---------------------------------------------------*/
   yyerrorlab:
-
-    /* Pacify compilers like GCC when the user code never invokes
-       YYERROR and the label yyerrorlab therefore never appears in user
-       code.  */
+    /* Pacify compilers when the user code never invokes YYERROR and
+       the label yyerrorlab therefore never appears in user code.  */
     if (false)
-      goto yyerrorlab;
-    yyerror_range[1].location = yystack_[yylen - 1].location;
+      YYERROR;
+
     /* Do not reclaim the symbols of the rule whose action triggered
        this YYERROR.  */
     yypop_ (yylen);
     yylen = 0;
+    YY_STACK_PRINT ();
     goto yyerrlab1;
+
 
   /*-------------------------------------------------------------.
   | yyerrlab1 -- common code for both syntax error and YYERROR.  |
   `-------------------------------------------------------------*/
   yyerrlab1:
     yyerrstatus_ = 3;   // Each real token shifted decrements this.
+    // Pop stack until we find a state that shifts the error token.
+    for (;;)
+      {
+        yyn = yypact_[+yystack_[0].state];
+        if (!yy_pact_value_is_default_ (yyn))
+          {
+            yyn += symbol_kind::S_YYerror;
+            if (0 <= yyn && yyn <= yylast_
+                && yycheck_[yyn] == symbol_kind::S_YYerror)
+              {
+                yyn = yytable_[yyn];
+                if (0 < yyn)
+                  break;
+              }
+          }
+
+        // Pop the current state because it cannot handle the error token.
+        if (yystack_.size () == 1)
+          YYABORT;
+
+        yyerror_range[1].location = yystack_[0].location;
+        yy_destroy_ ("Error: popping", yystack_[0]);
+        yypop_ ();
+        YY_STACK_PRINT ();
+      }
     {
       stack_symbol_type error_token;
-      for (;;)
-        {
-          yyn = yypact_[yystack_[0].state];
-          if (!yy_pact_value_is_default_ (yyn))
-            {
-              yyn += yyterror_;
-              if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
-                {
-                  yyn = yytable_[yyn];
-                  if (0 < yyn)
-                    break;
-                }
-            }
-
-          // Pop the current state because it cannot handle the error token.
-          if (yystack_.size () == 1)
-            YYABORT;
-
-          yyerror_range[1].location = yystack_[0].location;
-          yy_destroy_ ("Error: popping", yystack_[0]);
-          yypop_ ();
-          YY_STACK_PRINT ();
-        }
 
       yyerror_range[2].location = yyla.location;
       YYLLOC_DEFAULT (error_token.location, yyerror_range, 2);
 
       // Shift the error token.
-      error_token.state = yyn;
-      yypush_ ("Shifting", error_token);
+      error_token.state = state_type (yyn);
+      yypush_ ("Shifting", YY_MOVE (error_token));
     }
     goto yynewstate;
 
-    // Accept.
+
+  /*-------------------------------------.
+  | yyacceptlab -- YYACCEPT comes here.  |
+  `-------------------------------------*/
   yyacceptlab:
     yyresult = 0;
     goto yyreturn;
 
-    // Abort.
+
+  /*-----------------------------------.
+  | yyabortlab -- YYABORT comes here.  |
+  `-----------------------------------*/
   yyabortlab:
     yyresult = 1;
     goto yyreturn;
 
+
+  /*-----------------------------------------------------.
+  | yyreturn -- parsing is finished, return the result.  |
+  `-----------------------------------------------------*/
   yyreturn:
     if (!yyla.empty ())
       yy_destroy_ ("Cleanup: discarding lookahead", yyla);
@@ -2446,6 +2461,7 @@ namespace ibis {
     /* Do not reclaim the symbols of the rule whose action triggered
        this YYABORT or YYACCEPT.  */
     yypop_ (yylen);
+    YY_STACK_PRINT ();
     while (1 < yystack_.size ())
       {
         yy_destroy_ ("Cleanup: popping", yystack_[0]);
@@ -2454,12 +2470,12 @@ namespace ibis {
 
     return yyresult;
   }
+#if YY_EXCEPTIONS
     catch (...)
       {
-        YYCDEBUG << "Exception caught: cleaning lookahead and stack"
-                 << std::endl;
+        YYCDEBUG << "Exception caught: cleaning lookahead and stack\n";
         // Do not try to display the values of the reclaimed symbols,
-        // as their printer might throw an exception.
+        // as their printers might throw an exception.
         if (!yyla.empty ())
           yy_destroy_ (YY_NULLPTR, yyla);
 
@@ -2470,26 +2486,109 @@ namespace ibis {
           }
         throw;
       }
+#endif // YY_EXCEPTIONS
   }
 
   void
   whereParser::error (const syntax_error& yyexc)
   {
-    error (yyexc.location, yyexc.what());
+    error (yyexc.location, yyexc.what ());
   }
 
-  // Generate an error message.
+  /* Return YYSTR after stripping away unnecessary quotes and
+     backslashes, so that it's suitable for yyerror.  The heuristic is
+     that double-quoting is unnecessary unless the string contains an
+     apostrophe, a comma, or backslash (other than backslash-backslash).
+     YYSTR is taken from yytname.  */
   std::string
-  whereParser::yysyntax_error_ (state_type yystate, const symbol_type& yyla) const
+  whereParser::yytnamerr_ (const char *yystr)
   {
-    // Number of reported tokens (one for the "unexpected", one per
-    // "expected").
-    size_t yycount = 0;
-    // Its maximum.
-    enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
-    // Arguments of yyformat.
-    char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+    if (*yystr == '"')
+      {
+        std::string yyr;
+        char const *yyp = yystr;
 
+        for (;;)
+          switch (*++yyp)
+            {
+            case '\'':
+            case ',':
+              goto do_not_strip_quotes;
+
+            case '\\':
+              if (*++yyp != '\\')
+                goto do_not_strip_quotes;
+              else
+                goto append;
+
+            append:
+            default:
+              yyr += *yyp;
+              break;
+
+            case '"':
+              return yyr;
+            }
+      do_not_strip_quotes: ;
+      }
+
+    return yystr;
+  }
+
+  std::string
+  whereParser::symbol_name (symbol_kind_type yysymbol)
+  {
+    return yytnamerr_ (yytname_[yysymbol]);
+  }
+
+
+
+  // whereParser::context.
+  whereParser::context::context (const whereParser& yyparser, const symbol_type& yyla)
+    : yyparser_ (yyparser)
+    , yyla_ (yyla)
+  {}
+
+  int
+  whereParser::context::expected_tokens (symbol_kind_type yyarg[], int yyargn) const
+  {
+    // Actual number of expected tokens
+    int yycount = 0;
+
+    int yyn = yypact_[+yyparser_.yystack_[0].state];
+    if (!yy_pact_value_is_default_ (yyn))
+      {
+        /* Start YYX at -YYN if negative to avoid negative indexes in
+           YYCHECK.  In other words, skip the first -YYN actions for
+           this state because they are default actions.  */
+        int yyxbegin = yyn < 0 ? -yyn : 0;
+        // Stay within bounds of both yycheck and yytname.
+        int yychecklim = yylast_ - yyn + 1;
+        int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+        for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
+          if (yycheck_[yyx + yyn] == yyx && yyx != symbol_kind::S_YYerror
+              && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
+            {
+              if (!yyarg)
+                ++yycount;
+              else if (yycount == yyargn)
+                return 0;
+              else
+                yyarg[yycount++] = YY_CAST (symbol_kind_type, yyx);
+            }
+      }
+
+    if (yyarg && yycount == 0 && 0 < yyargn)
+      yyarg[0] = symbol_kind::S_YYEMPTY;
+    return yycount;
+  }
+
+
+
+  int
+  whereParser::yy_syntax_error_arguments_ (const context& yyctx,
+                                                 symbol_kind_type yyarg[], int yyargn) const
+  {
     /* There are many possibilities here to consider:
        - If this state is a consistent state with a default action, then
          the only way this function was invoked is if the default action
@@ -2508,41 +2607,32 @@ namespace ibis {
        - Of course, the expected token list depends on states to have
          correct lookahead information, and it depends on the parser not
          to perform extra reductions after fetching a lookahead from the
-         scanner and before detecting a syntax error.  Thus, state
-         merging (from LALR or IELR) and default reductions corrupt the
-         expected token list.  However, the list is correct for
-         canonical LR with one exception: it will still contain any
-         token that will not be accepted due to an error action in a
-         later state.
+         scanner and before detecting a syntax error.  Thus, state merging
+         (from LALR or IELR) and default reductions corrupt the expected
+         token list.  However, the list is correct for canonical LR with
+         one exception: it will still contain any token that will not be
+         accepted due to an error action in a later state.
     */
-    if (!yyla.empty ())
+
+    if (!yyctx.lookahead ().empty ())
       {
-        int yytoken = yyla.type_get ();
-        yyarg[yycount++] = yytname_[yytoken];
-        int yyn = yypact_[yystate];
-        if (!yy_pact_value_is_default_ (yyn))
-          {
-            /* Start YYX at -YYN if negative to avoid negative indexes in
-               YYCHECK.  In other words, skip the first -YYN actions for
-               this state because they are default actions.  */
-            int yyxbegin = yyn < 0 ? -yyn : 0;
-            // Stay within bounds of both yycheck and yytname.
-            int yychecklim = yylast_ - yyn + 1;
-            int yyxend = yychecklim < yyntokens_ ? yychecklim : yyntokens_;
-            for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
-              if (yycheck_[yyx + yyn] == yyx && yyx != yyterror_
-                  && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
-                {
-                  if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
-                    {
-                      yycount = 1;
-                      break;
-                    }
-                  else
-                    yyarg[yycount++] = yytname_[yyx];
-                }
-          }
+        if (yyarg)
+          yyarg[0] = yyctx.token ();
+        int yyn = yyctx.expected_tokens (yyarg ? yyarg + 1 : yyarg, yyargn - 1);
+        return yyn + 1;
       }
+    return 0;
+  }
+
+  // Generate an error message.
+  std::string
+  whereParser::yysyntax_error_ (const context& yyctx) const
+  {
+    // Its maximum.
+    enum { YYARGS_MAX = 5 };
+    // Arguments of yyformat.
+    symbol_kind_type yyarg[YYARGS_MAX];
+    int yycount = yy_syntax_error_arguments_ (yyctx, yyarg, YYARGS_MAX);
 
     char const* yyformat = YY_NULLPTR;
     switch (yycount)
@@ -2551,22 +2641,23 @@ namespace ibis {
         case N:                               \
           yyformat = S;                       \
         break
-        YYCASE_(0, YY_("syntax error"));
-        YYCASE_(1, YY_("syntax error, unexpected %s"));
-        YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
-        YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
-        YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
-        YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+      default: // Avoid compiler warnings.
+        YYCASE_ (0, YY_("syntax error"));
+        YYCASE_ (1, YY_("syntax error, unexpected %s"));
+        YYCASE_ (2, YY_("syntax error, unexpected %s, expecting %s"));
+        YYCASE_ (3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+        YYCASE_ (4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+        YYCASE_ (5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
 #undef YYCASE_
       }
 
     std::string yyres;
     // Argument number.
-    size_t yyi = 0;
+    std::ptrdiff_t yyi = 0;
     for (char const* yyp = yyformat; *yyp; ++yyp)
       if (yyp[0] == '%' && yyp[1] == 's' && yyi < yycount)
         {
-          yyres += yytnamerr_ (yyarg[yyi++]);
+          yyres += symbol_name (yyarg[yyi++]);
           ++yyp;
         }
       else
@@ -2579,7 +2670,7 @@ namespace ibis {
 
   const signed char whereParser::yytable_ninf_ = -1;
 
-  const short int
+  const short
   whereParser::yypact_[] =
   {
       76,    76,   -13,   -43,   -41,   -23,   -14,    -7,    -2,    25,
@@ -2607,7 +2698,7 @@ namespace ibis {
      -44,   -44,   -44,   -44,   -44
   };
 
-  const unsigned char
+  const signed char
   whereParser::yydefact_[] =
   {
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -2644,7 +2735,7 @@ namespace ibis {
   const signed char
   whereParser::yydefgoto_[] =
   {
-      -1,    16,    17,    18,    19,    20,    21
+       0,    16,    17,    18,    19,    20,    21
   };
 
   const unsigned char
@@ -2692,7 +2783,7 @@ namespace ibis {
       63,    64,    65,    66,    67,    68,   224,     0,     0,   205
   };
 
-  const short int
+  const short
   whereParser::yycheck_[] =
   {
       10,    11,    45,     3,    45,    15,    11,    12,    13,    14,
@@ -2737,7 +2828,7 @@ namespace ibis {
       29,    30,    31,    32,    33,    34,    46,    -1,    -1,    46
   };
 
-  const unsigned char
+  const signed char
   whereParser::yystos_[] =
   {
        0,     4,    17,    20,    21,    22,    23,    24,    25,    26,
@@ -2765,7 +2856,7 @@ namespace ibis {
       46,    46,    46,    46,    46
   };
 
-  const unsigned char
+  const signed char
   whereParser::yyr1_[] =
   {
        0,    49,    50,    50,    50,    50,    50,    50,    50,    50,
@@ -2781,7 +2872,7 @@ namespace ibis {
       55
   };
 
-  const unsigned char
+  const signed char
   whereParser::yyr2_[] =
   {
        0,     2,     3,     3,     3,     3,     2,     3,     1,     1,
@@ -2798,67 +2889,67 @@ namespace ibis {
   };
 
 
-
+#if YYDEBUG || 1
   // YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-  // First, the terminals, then, starting at \a yyntokens_, nonterminals.
+  // First, the terminals, then, starting at \a YYNTOKENS, nonterminals.
   const char*
   const whereParser::yytname_[] =
   {
-  "\"end of input\"", "error", "$undefined", "\"null\"", "\"not\"",
+  "\"end of input\"", "error", "\"invalid token\"", "\"null\"", "\"not\"",
   "\"<=\"", "\">=\"", "\"<\"", "\">\"", "\"==\"", "\"!=\"", "\"and\"",
   "\"&!\"", "\"or\"", "\"xor\"", "\"between\"", "\"contains\"",
   "\"exists\"", "\"in\"", "\"like\"", "\"FROM_UNIXTIME_GMT\"",
   "\"FROM_UNIXTIME_LOCAL\"", "\"TO_UNIXTIME_GMT\"",
   "\"TO_UNIXTIME_LOCAL\"", "\"ISO_TO_UNIXTIME_GMT\"",
   "\"ISO_TO_UNIXTIME_LOCAL\"", "\"any\"", "\"|\"", "\"&\"", "\"+\"",
-  "\"-\"", "\"*\"", "\"/\"", "\"%\"", "\"**\"", "\"integer value\"",
-  "\"unsigned integer value\"", "\"floating-point number\"",
-  "\"signed integer sequence\"", "\"unsigned integer sequence\"",
-  "\"name string\"", "\"number sequence\"", "\"string sequence\"",
-  "\"string literal\"", "CONSTAINSOP", "'('", "')'", "','", "';'",
-  "$accept", "qexpr", "simpleRange", "compRange2", "compRange3",
-  "mathExpr", "START", YY_NULLPTR
+  "\"-\"", "\"*\"", "\"/\"", "\"%\"", "\"**\"",
+  "\"(64-bit) integer value\"", "\"unsigned (64-bit) integer value\"",
+  "\"floating-point number\"", "\"signed integer sequence\"",
+  "\"unsigned integer sequence\"", "\"name string\"",
+  "\"number sequence\"", "\"string sequence\"", "\"string literal\"",
+  "CONSTAINSOP", "'('", "')'", "','", "';'", "$accept", "qexpr",
+  "simpleRange", "compRange2", "compRange3", "mathExpr", "START", YY_NULLPTR
   };
+#endif
+
 
 #if YYDEBUG
-  const unsigned short int
+  const short
   whereParser::yyrline_[] =
   {
-       0,   115,   115,   125,   135,   145,   155,   163,   166,   167,
-     168,   172,   180,   188,   196,   204,   214,   226,   235,   242,
-     253,   266,   276,   286,   303,   320,   337,   354,   368,   382,
-     392,   402,   413,   431,   449,   467,   485,   500,   515,   525,
-     536,   546,   557,   567,   577,   587,   597,   608,   619,   630,
-     641,   651,   660,   670,   678,   687,   695,   704,   714,   725,
-     735,   746,   763,   786,   796,   807,   817,   827,   837,   899,
-     911,   923,   935,   947,   959,   971,   983,   995,  1010,  1022,
-    1034,  1046,  1058,  1070,  1082,  1094,  1106,  1118,  1131,  1144,
-    1158,  1171,  1184,  1225,  1262,  1272,  1275,  1278,  1288,  1298,
-    1301
+       0,   116,   116,   126,   136,   146,   156,   164,   167,   168,
+     169,   173,   181,   189,   197,   205,   215,   227,   236,   243,
+     254,   267,   277,   287,   304,   321,   338,   355,   369,   383,
+     393,   403,   414,   432,   450,   468,   486,   501,   516,   526,
+     537,   547,   558,   568,   578,   588,   598,   609,   620,   631,
+     642,   652,   661,   671,   679,   688,   696,   705,   715,   726,
+     736,   747,   764,   787,   797,   808,   818,   828,   838,   900,
+     912,   924,   936,   948,   960,   972,   984,   996,  1011,  1023,
+    1035,  1047,  1059,  1071,  1083,  1095,  1107,  1119,  1132,  1145,
+    1159,  1172,  1185,  1226,  1263,  1273,  1276,  1279,  1289,  1299,
+    1302
   };
 
-  // Print the state stack on the debug stream.
   void
-  whereParser::yystack_print_ ()
+  whereParser::yy_stack_print_ () const
   {
     *yycdebug_ << "Stack now";
     for (stack_type::const_iterator
            i = yystack_.begin (),
            i_end = yystack_.end ();
          i != i_end; ++i)
-      *yycdebug_ << ' ' << i->state;
-    *yycdebug_ << std::endl;
+      *yycdebug_ << ' ' << int (i->state);
+    *yycdebug_ << '\n';
   }
 
-  // Report on the debug stream that the rule \a yyrule is going to be reduced.
   void
-  whereParser::yy_reduce_print_ (int yyrule)
+  whereParser::yy_reduce_print_ (int yyrule) const
   {
-    unsigned int yylno = yyrline_[yyrule];
+    int yylno = yyrline_[yyrule];
     int yynrhs = yyr2_[yyrule];
     // Print the symbols being reduced, and their result.
     *yycdebug_ << "Reducing stack by rule " << yyrule - 1
-               << " (line " << yylno << "):" << std::endl;
+               << " (line " << yylno << "):\n";
     // The symbols being reduced.
     for (int yyi = 0; yyi < yynrhs; yyi++)
       YY_SYMBOL_PRINT ("   $" << yyi + 1 << " =",
@@ -2866,16 +2957,16 @@ namespace ibis {
   }
 #endif // YYDEBUG
 
-  // Symbol number corresponding to token number t.
-  inline
-  whereParser::token_number_type
+  whereParser::symbol_kind_type
   whereParser::yytranslate_ (int t)
   {
+    // YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to
+    // TOKEN-NUM as returned by yylex.
     static
-    const token_number_type
+    const signed char
     translate_table[] =
     {
-     0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -2906,21 +2997,22 @@ namespace ibis {
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44
     };
-    const unsigned int user_token_number_max_ = 299;
-    const token_number_type undef_token_ = 2;
+    // Last valid token kind.
+    const int code_max = 299;
 
-    if (static_cast<int>(t) <= yyeof_)
-      return yyeof_;
-    else if (static_cast<unsigned int> (t) <= user_token_number_max_)
-      return translate_table[t];
+    if (t <= 0)
+      return symbol_kind::S_YYEOF;
+    else if (t <= code_max)
+      return YY_CAST (symbol_kind_type, translate_table[t]);
     else
-      return undef_token_;
+      return symbol_kind::S_YYUNDEF;
   }
 
-#line 25 "whereParser.yy" // lalr1.cc:1167
+#line 26 "whereParser.yy"
 } // ibis
-#line 2923 "whereParser.cc" // lalr1.cc:1167
-#line 1306 "whereParser.yy" // lalr1.cc:1168
+#line 3014 "whereParser.cc"
+
+#line 1307 "whereParser.yy"
 
 void ibis::whereParser::error(const ibis::whereParser::location_type& l,
 			      const std::string& m) {

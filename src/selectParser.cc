@@ -1,8 +1,8 @@
-// A Bison parser, made by GNU Bison 3.0.4.
+// A Bison parser, made by GNU Bison 3.7.6.
 
 // Skeleton implementation for Bison LALR(1) parsers in C++
 
-// Copyright (C) 2002-2015 Free Software Foundation, Inc.
+// Copyright (C) 2002-2015, 2018-2021 Free Software Foundation, Inc.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // As a special exception, you may create a larger work that contains
 // part or all of the Bison parser skeleton and distribute that work
@@ -29,40 +29,36 @@
 
 // This special exception was added by the Free Software Foundation in
 // version 2.2 of Bison.
-// //                    "%code top" blocks.
-#line 6 "selectParser.yy" // lalr1.cc:397
+
+// DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+// especially those whose name start with YY_ or yy_.  They are
+// private implementation details that can be changed or removed.
+
+// "%code top" blocks.
+#line 6 "selectParser.yy"
 
 /** \file Defines the parser for the select clause accepted by FastBit
     IBIS.  The definitions are processed through bison.
 */
 #include <iostream>
 
-#line 41 "selectParser.cc" // lalr1.cc:397
+#line 46 "selectParser.cc"
 
 
-// First part of user declarations.
 
-#line 46 "selectParser.cc" // lalr1.cc:404
-
-# ifndef YY_NULLPTR
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
-#  else
-#   define YY_NULLPTR 0
-#  endif
-# endif
 
 #include "selectParser.hh"
 
-// User implementation prologue.
-#line 70 "selectParser.yy" // lalr1.cc:412
+// Second part of user prologue.
+#line 70 "selectParser.yy"
 
 #include "selectLexer.h"
 
 #undef yylex
 #define yylex driver.lexer->lex
 
-#line 66 "selectParser.cc" // lalr1.cc:412
+#line 61 "selectParser.cc"
+
 
 
 #ifndef YY_
@@ -74,6 +70,16 @@
 # endif
 # ifndef YY_
 #  define YY_(msgid) msgid
+# endif
+#endif
+
+
+// Whether we are compiled with exception support.
+#ifndef YY_EXCEPTIONS
+# if defined __GNUC__ && !defined __EXCEPTIONS
+#  define YY_EXCEPTIONS 0
+# else
+#  define YY_EXCEPTIONS 1
 # endif
 #endif
 
@@ -94,12 +100,9 @@
         {                                                               \
           (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;      \
         }                                                               \
-    while (/*CONSTCOND*/ false)
+    while (false)
 # endif
 
-
-// Suppress unused-variable warnings by "using" E.
-#define YYUSE(E) ((void) (E))
 
 // Enable debugging if requested.
 #if YYDEBUG
@@ -113,7 +116,7 @@
     {                                           \
       *yycdebug_ << Title << ' ';               \
       yy_print_ (*yycdebug_, Symbol);           \
-      *yycdebug_ << std::endl;                  \
+      *yycdebug_ << '\n';                       \
     }                                           \
   } while (false)
 
@@ -126,15 +129,15 @@
 # define YY_STACK_PRINT()               \
   do {                                  \
     if (yydebug_)                       \
-      yystack_print_ ();                \
+      yy_stack_print_ ();                \
   } while (false)
 
 #else // !YYDEBUG
 
 # define YYCDEBUG if (false) std::cerr
-# define YY_SYMBOL_PRINT(Title, Symbol)  YYUSE(Symbol)
-# define YY_REDUCE_PRINT(Rule)           static_cast<void>(0)
-# define YY_STACK_PRINT()                static_cast<void>(0)
+# define YY_SYMBOL_PRINT(Title, Symbol)  YY_USE (Symbol)
+# define YY_REDUCE_PRINT(Rule)           static_cast<void> (0)
+# define YY_STACK_PRINT()                static_cast<void> (0)
 
 #endif // !YYDEBUG
 
@@ -146,54 +149,17 @@
 #define YYERROR         goto yyerrorlab
 #define YYRECOVERING()  (!!yyerrstatus_)
 
-#line 23 "selectParser.yy" // lalr1.cc:479
+#line 23 "selectParser.yy"
 namespace ibis {
-#line 152 "selectParser.cc" // lalr1.cc:479
-
-  /* Return YYSTR after stripping away unnecessary quotes and
-     backslashes, so that it's suitable for yyerror.  The heuristic is
-     that double-quoting is unnecessary unless the string contains an
-     apostrophe, a comma, or backslash (other than backslash-backslash).
-     YYSTR is taken from yytname.  */
-  std::string
-  selectParser::yytnamerr_ (const char *yystr)
-  {
-    if (*yystr == '"')
-      {
-        std::string yyr = "";
-        char const *yyp = yystr;
-
-        for (;;)
-          switch (*++yyp)
-            {
-            case '\'':
-            case ',':
-              goto do_not_strip_quotes;
-
-            case '\\':
-              if (*++yyp != '\\')
-                goto do_not_strip_quotes;
-              // Fall through.
-            default:
-              yyr += *yyp;
-              break;
-
-            case '"':
-              return yyr;
-            }
-      do_not_strip_quotes: ;
-      }
-
-    return yystr;
-  }
-
+#line 155 "selectParser.cc"
 
   /// Build a parser object.
   selectParser::selectParser (class ibis::selectClause& driver_yyarg)
-    :
 #if YYDEBUG
-      yydebug_ (false),
+    : yydebug_ (false),
       yycdebug_ (&std::cerr),
+#else
+    :
 #endif
       driver (driver_yyarg)
   {}
@@ -201,144 +167,122 @@ namespace ibis {
   selectParser::~selectParser ()
   {}
 
+  selectParser::syntax_error::~syntax_error () YY_NOEXCEPT YY_NOTHROW
+  {}
 
   /*---------------.
-  | Symbol types.  |
+  | symbol kinds.  |
   `---------------*/
-
-  inline
-  selectParser::syntax_error::syntax_error (const location_type& l, const std::string& m)
-    : std::runtime_error (m)
-    , location (l)
-  {}
 
   // basic_symbol.
   template <typename Base>
-  inline
-  selectParser::basic_symbol<Base>::basic_symbol ()
-    : value ()
-  {}
-
-  template <typename Base>
-  inline
-  selectParser::basic_symbol<Base>::basic_symbol (const basic_symbol& other)
-    : Base (other)
-    , value ()
-    , location (other.location)
-  {
-    value = other.value;
-  }
-
-
-  template <typename Base>
-  inline
-  selectParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const semantic_type& v, const location_type& l)
-    : Base (t)
-    , value (v)
-    , location (l)
+  selectParser::basic_symbol<Base>::basic_symbol (const basic_symbol& that)
+    : Base (that)
+    , value (that.value)
+    , location (that.location)
   {}
 
 
   /// Constructor for valueless symbols.
   template <typename Base>
-  inline
-  selectParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const location_type& l)
+  selectParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, YY_MOVE_REF (location_type) l)
     : Base (t)
     , value ()
     , location (l)
   {}
 
   template <typename Base>
-  inline
-  selectParser::basic_symbol<Base>::~basic_symbol ()
+  selectParser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, YY_RVREF (semantic_type) v, YY_RVREF (location_type) l)
+    : Base (t)
+    , value (YY_MOVE (v))
+    , location (YY_MOVE (l))
+  {}
+
+  template <typename Base>
+  selectParser::symbol_kind_type
+  selectParser::basic_symbol<Base>::type_get () const YY_NOEXCEPT
   {
-    clear ();
+    return this->kind ();
   }
 
   template <typename Base>
-  inline
-  void
-  selectParser::basic_symbol<Base>::clear ()
-  {
-    Base::clear ();
-  }
-
-  template <typename Base>
-  inline
   bool
-  selectParser::basic_symbol<Base>::empty () const
+  selectParser::basic_symbol<Base>::empty () const YY_NOEXCEPT
   {
-    return Base::type_get () == empty_symbol;
+    return this->kind () == symbol_kind::S_YYEMPTY;
   }
 
   template <typename Base>
-  inline
   void
   selectParser::basic_symbol<Base>::move (basic_symbol& s)
   {
-    super_type::move(s);
-    value = s.value;
-    location = s.location;
+    super_type::move (s);
+    value = YY_MOVE (s.value);
+    location = YY_MOVE (s.location);
   }
 
-  // by_type.
-  inline
-  selectParser::by_type::by_type ()
-    : type (empty_symbol)
+  // by_kind.
+  selectParser::by_kind::by_kind ()
+    : kind_ (symbol_kind::S_YYEMPTY)
   {}
 
-  inline
-  selectParser::by_type::by_type (const by_type& other)
-    : type (other.type)
-  {}
-
-  inline
-  selectParser::by_type::by_type (token_type t)
-    : type (yytranslate_ (t))
-  {}
-
-  inline
-  void
-  selectParser::by_type::clear ()
+#if 201103L <= YY_CPLUSPLUS
+  selectParser::by_kind::by_kind (by_kind&& that)
+    : kind_ (that.kind_)
   {
-    type = empty_symbol;
+    that.clear ();
+  }
+#endif
+
+  selectParser::by_kind::by_kind (const by_kind& that)
+    : kind_ (that.kind_)
+  {}
+
+  selectParser::by_kind::by_kind (token_kind_type t)
+    : kind_ (yytranslate_ (t))
+  {}
+
+  void
+  selectParser::by_kind::clear () YY_NOEXCEPT
+  {
+    kind_ = symbol_kind::S_YYEMPTY;
   }
 
-  inline
   void
-  selectParser::by_type::move (by_type& that)
+  selectParser::by_kind::move (by_kind& that)
   {
-    type = that.type;
+    kind_ = that.kind_;
     that.clear ();
   }
 
-  inline
-  int
-  selectParser::by_type::type_get () const
+  selectParser::symbol_kind_type
+  selectParser::by_kind::kind () const YY_NOEXCEPT
   {
-    return type;
+    return kind_;
+  }
+
+  selectParser::symbol_kind_type
+  selectParser::by_kind::type_get () const YY_NOEXCEPT
+  {
+    return this->kind ();
   }
 
 
   // by_state.
-  inline
-  selectParser::by_state::by_state ()
+  selectParser::by_state::by_state () YY_NOEXCEPT
     : state (empty_state)
   {}
 
-  inline
-  selectParser::by_state::by_state (const by_state& other)
-    : state (other.state)
+  selectParser::by_state::by_state (const by_state& that) YY_NOEXCEPT
+    : state (that.state)
   {}
 
-  inline
   void
-  selectParser::by_state::clear ()
+  selectParser::by_state::clear () YY_NOEXCEPT
   {
     state = empty_state;
   }
 
-  inline
   void
   selectParser::by_state::move (by_state& that)
   {
@@ -346,36 +290,39 @@ namespace ibis {
     that.clear ();
   }
 
-  inline
-  selectParser::by_state::by_state (state_type s)
+  selectParser::by_state::by_state (state_type s) YY_NOEXCEPT
     : state (s)
   {}
 
-  inline
-  selectParser::symbol_number_type
-  selectParser::by_state::type_get () const
+  selectParser::symbol_kind_type
+  selectParser::by_state::kind () const YY_NOEXCEPT
   {
     if (state == empty_state)
-      return empty_symbol;
+      return symbol_kind::S_YYEMPTY;
     else
-      return yystos_[state];
+      return YY_CAST (symbol_kind_type, yystos_[+state]);
   }
 
-  inline
   selectParser::stack_symbol_type::stack_symbol_type ()
   {}
 
-
-  inline
-  selectParser::stack_symbol_type::stack_symbol_type (state_type s, symbol_type& that)
-    : super_type (s, that.location)
+  selectParser::stack_symbol_type::stack_symbol_type (YY_RVREF (stack_symbol_type) that)
+    : super_type (YY_MOVE (that.state), YY_MOVE (that.value), YY_MOVE (that.location))
   {
-    value = that.value;
+#if 201103L <= YY_CPLUSPLUS
     // that is emptied.
-    that.type = empty_symbol;
+    that.state = empty_state;
+#endif
   }
 
-  inline
+  selectParser::stack_symbol_type::stack_symbol_type (state_type s, YY_MOVE_REF (symbol_type) that)
+    : super_type (s, YY_MOVE (that.value), YY_MOVE (that.location))
+  {
+    // that is emptied.
+    that.kind_ = symbol_kind::S_YYEMPTY;
+  }
+
+#if YY_CPLUSPLUS < 201103L
   selectParser::stack_symbol_type&
   selectParser::stack_symbol_type::operator= (const stack_symbol_type& that)
   {
@@ -385,9 +332,19 @@ namespace ibis {
     return *this;
   }
 
+  selectParser::stack_symbol_type&
+  selectParser::stack_symbol_type::operator= (stack_symbol_type& that)
+  {
+    state = that.state;
+    value = that.value;
+    location = that.location;
+    // that is emptied.
+    that.state = empty_state;
+    return *this;
+  }
+#endif
 
   template <typename Base>
-  inline
   void
   selectParser::yy_destroy_ (const char* yymsg, basic_symbol<Base>& yysym) const
   {
@@ -395,29 +352,25 @@ namespace ibis {
       YY_SYMBOL_PRINT (yymsg, yysym);
 
     // User destructor.
-    switch (yysym.type_get ())
+    switch (yysym.kind ())
     {
-            case 13: // "name"
-
-#line 67 "selectParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 405 "selectParser.cc" // lalr1.cc:614
+      case symbol_kind::S_NOUNSTR: // "name"
+#line 67 "selectParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 361 "selectParser.cc"
         break;
 
-      case 14: // "string literal"
-
-#line 66 "selectParser.yy" // lalr1.cc:614
-        { delete (yysym.value.stringVal); }
-#line 412 "selectParser.cc" // lalr1.cc:614
+      case symbol_kind::S_STRLIT: // "string literal"
+#line 66 "selectParser.yy"
+                    { delete (yysym.value.stringVal); }
+#line 367 "selectParser.cc"
         break;
 
-      case 23: // mathExpr
-
-#line 68 "selectParser.yy" // lalr1.cc:614
-        { delete (yysym.value.selectNode); }
-#line 419 "selectParser.cc" // lalr1.cc:614
+      case symbol_kind::S_mathExpr: // mathExpr
+#line 68 "selectParser.yy"
+                    { delete (yysym.value.selectNode); }
+#line 373 "selectParser.cc"
         break;
-
 
       default:
         break;
@@ -427,44 +380,45 @@ namespace ibis {
 #if YYDEBUG
   template <typename Base>
   void
-  selectParser::yy_print_ (std::ostream& yyo,
-                                     const basic_symbol<Base>& yysym) const
+  selectParser::yy_print_ (std::ostream& yyo, const basic_symbol<Base>& yysym) const
   {
     std::ostream& yyoutput = yyo;
-    YYUSE (yyoutput);
-    symbol_number_type yytype = yysym.type_get ();
-    // Avoid a (spurious) G++ 4.8 warning about "array subscript is
-    // below array bounds".
+    YY_USE (yyoutput);
     if (yysym.empty ())
-      std::abort ();
-    yyo << (yytype < yyntokens_ ? "token" : "nterm")
-        << ' ' << yytname_[yytype] << " ("
-        << yysym.location << ": ";
-    YYUSE (yytype);
-    yyo << ')';
+      yyo << "empty symbol";
+    else
+      {
+        symbol_kind_type yykind = yysym.kind ();
+        yyo << (yykind < YYNTOKENS ? "token" : "nterm")
+            << ' ' << yysym.name () << " ("
+            << yysym.location << ": ";
+        YY_USE (yykind);
+        yyo << ')';
+      }
   }
 #endif
 
-  inline
   void
-  selectParser::yypush_ (const char* m, state_type s, symbol_type& sym)
-  {
-    stack_symbol_type t (s, sym);
-    yypush_ (m, t);
-  }
-
-  inline
-  void
-  selectParser::yypush_ (const char* m, stack_symbol_type& s)
+  selectParser::yypush_ (const char* m, YY_MOVE_REF (stack_symbol_type) sym)
   {
     if (m)
-      YY_SYMBOL_PRINT (m, s);
-    yystack_.push (s);
+      YY_SYMBOL_PRINT (m, sym);
+    yystack_.push (YY_MOVE (sym));
   }
 
-  inline
   void
-  selectParser::yypop_ (unsigned int n)
+  selectParser::yypush_ (const char* m, state_type s, YY_MOVE_REF (symbol_type) sym)
+  {
+#if 201103L <= YY_CPLUSPLUS
+    yypush_ (m, stack_symbol_type (s, std::move (sym)));
+#else
+    stack_symbol_type ss (s, sym);
+    yypush_ (m, ss);
+#endif
+  }
+
+  void
+  selectParser::yypop_ (int n)
   {
     yystack_.pop (n);
   }
@@ -496,32 +450,37 @@ namespace ibis {
   }
 #endif // YYDEBUG
 
-  inline selectParser::state_type
+  selectParser::state_type
   selectParser::yy_lr_goto_state_ (state_type yystate, int yysym)
   {
-    int yyr = yypgoto_[yysym - yyntokens_] + yystate;
+    int yyr = yypgoto_[yysym - YYNTOKENS] + yystate;
     if (0 <= yyr && yyr <= yylast_ && yycheck_[yyr] == yystate)
       return yytable_[yyr];
     else
-      return yydefgoto_[yysym - yyntokens_];
+      return yydefgoto_[yysym - YYNTOKENS];
   }
 
-  inline bool
+  bool
   selectParser::yy_pact_value_is_default_ (int yyvalue)
   {
     return yyvalue == yypact_ninf_;
   }
 
-  inline bool
+  bool
   selectParser::yy_table_value_is_error_ (int yyvalue)
   {
     return yyvalue == yytable_ninf_;
   }
 
   int
+  selectParser::operator() ()
+  {
+    return parse ();
+  }
+
+  int
   selectParser::parse ()
   {
-    // State.
     int yyn;
     /// Length of the RHS of the rule being reduced.
     int yylen = 0;
@@ -539,67 +498,90 @@ namespace ibis {
     /// The return value of parse ().
     int yyresult;
 
-    // FIXME: This shoud be completely indented.  It is not yet to
-    // avoid gratuitous conflicts when merging into the master branch.
+#if YY_EXCEPTIONS
     try
+#endif // YY_EXCEPTIONS
       {
-    YYCDEBUG << "Starting parse" << std::endl;
+    YYCDEBUG << "Starting parse\n";
 
 
     // User initialization code.
-    #line 28 "selectParser.yy" // lalr1.cc:741
+#line 28 "selectParser.yy"
 { // initialize location object
     yyla.location.begin.filename = yyla.location.end.filename = &(driver.clause_);
 }
 
-#line 556 "selectParser.cc" // lalr1.cc:741
+#line 515 "selectParser.cc"
+
 
     /* Initialize the stack.  The initial state will be set in
        yynewstate, since the latter expects the semantical and the
        location values to have been already stored, initialize these
        stacks with a primary value.  */
     yystack_.clear ();
-    yypush_ (YY_NULLPTR, 0, yyla);
+    yypush_ (YY_NULLPTR, 0, YY_MOVE (yyla));
 
-    // A new symbol was pushed on the stack.
+  /*-----------------------------------------------.
+  | yynewstate -- push a new symbol on the stack.  |
+  `-----------------------------------------------*/
   yynewstate:
-    YYCDEBUG << "Entering state " << yystack_[0].state << std::endl;
+    YYCDEBUG << "Entering state " << int (yystack_[0].state) << '\n';
+    YY_STACK_PRINT ();
 
     // Accept?
     if (yystack_[0].state == yyfinal_)
-      goto yyacceptlab;
+      YYACCEPT;
 
     goto yybackup;
 
-    // Backup.
-  yybackup:
 
+  /*-----------.
+  | yybackup.  |
+  `-----------*/
+  yybackup:
     // Try to take a decision without lookahead.
-    yyn = yypact_[yystack_[0].state];
+    yyn = yypact_[+yystack_[0].state];
     if (yy_pact_value_is_default_ (yyn))
       goto yydefault;
 
     // Read a lookahead token.
     if (yyla.empty ())
       {
-        YYCDEBUG << "Reading a token: ";
+        YYCDEBUG << "Reading a token\n";
+#if YY_EXCEPTIONS
         try
+#endif // YY_EXCEPTIONS
           {
-            yyla.type = yytranslate_ (yylex (&yyla.value, &yyla.location));
+            yyla.kind_ = yytranslate_ (yylex (&yyla.value, &yyla.location));
           }
+#if YY_EXCEPTIONS
         catch (const syntax_error& yyexc)
           {
+            YYCDEBUG << "Caught exception: " << yyexc.what() << '\n';
             error (yyexc);
             goto yyerrlab1;
           }
+#endif // YY_EXCEPTIONS
       }
     YY_SYMBOL_PRINT ("Next token is", yyla);
 
+    if (yyla.kind () == symbol_kind::S_YYerror)
+    {
+      // The scanner already issued an error message, process directly
+      // to error recovery.  But do not keep the error token as
+      // lookahead, it is too special and may lead us to an endless
+      // loop in error recovery. */
+      yyla.kind_ = symbol_kind::S_YYUNDEF;
+      goto yyerrlab1;
+    }
+
     /* If the proper action on seeing token YYLA.TYPE is to reduce or
        to detect an error, take that action.  */
-    yyn += yyla.type_get ();
-    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yyla.type_get ())
-      goto yydefault;
+    yyn += yyla.kind ();
+    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yyla.kind ())
+      {
+        goto yydefault;
+      }
 
     // Reduce or error.
     yyn = yytable_[yyn];
@@ -616,26 +598,28 @@ namespace ibis {
       --yyerrstatus_;
 
     // Shift the lookahead token.
-    yypush_ ("Shifting", yyn, yyla);
+    yypush_ ("Shifting", state_type (yyn), YY_MOVE (yyla));
     goto yynewstate;
+
 
   /*-----------------------------------------------------------.
   | yydefault -- do the default action for the current state.  |
   `-----------------------------------------------------------*/
   yydefault:
-    yyn = yydefact_[yystack_[0].state];
+    yyn = yydefact_[+yystack_[0].state];
     if (yyn == 0)
       goto yyerrlab;
     goto yyreduce;
 
+
   /*-----------------------------.
-  | yyreduce -- Do a reduction.  |
+  | yyreduce -- do a reduction.  |
   `-----------------------------*/
   yyreduce:
     yylen = yyr2_[yyn];
     {
       stack_symbol_type yylhs;
-      yylhs.state = yy_lr_goto_state_(yystack_[yylen].state, yyr1_[yyn]);
+      yylhs.state = yy_lr_goto_state_ (yystack_[yylen].state, yyr1_[yyn]);
       /* If YYLEN is nonzero, implement the default value of the
          action: '$$ = $1'.  Otherwise, use the top of the stack.
 
@@ -647,73 +631,76 @@ namespace ibis {
       else
         yylhs.value = yystack_[0].value;
 
-      // Compute the default @$.
+      // Default location.
       {
-        slice<stack_symbol_type, stack_type> slice (yystack_, yylen);
-        YYLLOC_DEFAULT (yylhs.location, slice, yylen);
+        stack_type::slice range (yystack_, yylen);
+        YYLLOC_DEFAULT (yylhs.location, range, yylen);
+        yyerror_range[1].location = yylhs.location;
       }
 
       // Perform the reduction.
       YY_REDUCE_PRINT (yyn);
+#if YY_EXCEPTIONS
       try
+#endif // YY_EXCEPTIONS
         {
           switch (yyn)
             {
-  case 4:
-#line 79 "selectParser.yy" // lalr1.cc:859
-    {
+  case 4: // sterm: mathExpr ','
+#line 79 "selectParser.yy"
+                    {
     driver.addTerm((yystack_[1].value.selectNode), 0);
 }
-#line 668 "selectParser.cc" // lalr1.cc:859
+#line 655 "selectParser.cc"
     break;
 
-  case 5:
-#line 82 "selectParser.yy" // lalr1.cc:859
-    {
+  case 5: // sterm: mathExpr "end of input"
+#line 82 "selectParser.yy"
+               {
     driver.addTerm((yystack_[1].value.selectNode), 0);
 }
-#line 676 "selectParser.cc" // lalr1.cc:859
+#line 663 "selectParser.cc"
     break;
 
-  case 6:
-#line 85 "selectParser.yy" // lalr1.cc:859
-    {
+  case 6: // sterm: mathExpr "name" ','
+#line 85 "selectParser.yy"
+                       {
     driver.addTerm((yystack_[2].value.selectNode), (yystack_[1].value.stringVal));
     delete (yystack_[1].value.stringVal);
 }
-#line 685 "selectParser.cc" // lalr1.cc:859
+#line 672 "selectParser.cc"
     break;
 
-  case 7:
-#line 89 "selectParser.yy" // lalr1.cc:859
-    {
+  case 7: // sterm: mathExpr "name" "end of input"
+#line 89 "selectParser.yy"
+                       {
     driver.addTerm((yystack_[2].value.selectNode), (yystack_[1].value.stringVal));
     delete (yystack_[1].value.stringVal);
 }
-#line 694 "selectParser.cc" // lalr1.cc:859
+#line 681 "selectParser.cc"
     break;
 
-  case 8:
-#line 93 "selectParser.yy" // lalr1.cc:859
-    {
+  case 8: // sterm: mathExpr "as" "name" ','
+#line 93 "selectParser.yy"
+                            {
     driver.addTerm((yystack_[3].value.selectNode), (yystack_[1].value.stringVal));
     delete (yystack_[1].value.stringVal);
 }
-#line 703 "selectParser.cc" // lalr1.cc:859
+#line 690 "selectParser.cc"
     break;
 
-  case 9:
-#line 97 "selectParser.yy" // lalr1.cc:859
-    {
+  case 9: // sterm: mathExpr "as" "name" "end of input"
+#line 97 "selectParser.yy"
+                            {
     driver.addTerm((yystack_[3].value.selectNode), (yystack_[1].value.stringVal));
     delete (yystack_[1].value.stringVal);
 }
-#line 712 "selectParser.cc" // lalr1.cc:859
+#line 699 "selectParser.cc"
     break;
 
-  case 10:
-#line 104 "selectParser.yy" // lalr1.cc:859
-    {
+  case 10: // mathExpr: mathExpr "+" mathExpr
+#line 104 "selectParser.yy"
+                        {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -725,12 +712,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 729 "selectParser.cc" // lalr1.cc:859
+#line 716 "selectParser.cc"
     break;
 
-  case 11:
-#line 116 "selectParser.yy" // lalr1.cc:859
-    {
+  case 11: // mathExpr: mathExpr "-" mathExpr
+#line 116 "selectParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -742,12 +729,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 746 "selectParser.cc" // lalr1.cc:859
+#line 733 "selectParser.cc"
     break;
 
-  case 12:
-#line 128 "selectParser.yy" // lalr1.cc:859
-    {
+  case 12: // mathExpr: mathExpr "*" mathExpr
+#line 128 "selectParser.yy"
+                           {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -759,12 +746,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 763 "selectParser.cc" // lalr1.cc:859
+#line 750 "selectParser.cc"
     break;
 
-  case 13:
-#line 140 "selectParser.yy" // lalr1.cc:859
-    {
+  case 13: // mathExpr: mathExpr "/" mathExpr
+#line 140 "selectParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -776,12 +763,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 780 "selectParser.cc" // lalr1.cc:859
+#line 767 "selectParser.cc"
     break;
 
-  case 14:
-#line 152 "selectParser.yy" // lalr1.cc:859
-    {
+  case 14: // mathExpr: mathExpr "%" mathExpr
+#line 152 "selectParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -793,12 +780,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 797 "selectParser.cc" // lalr1.cc:859
+#line 784 "selectParser.cc"
     break;
 
-  case 15:
-#line 164 "selectParser.yy" // lalr1.cc:859
-    {
+  case 15: // mathExpr: mathExpr "**" mathExpr
+#line 164 "selectParser.yy"
+                          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -810,12 +797,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 814 "selectParser.cc" // lalr1.cc:859
+#line 801 "selectParser.cc"
     break;
 
-  case 16:
-#line 176 "selectParser.yy" // lalr1.cc:859
-    {
+  case 16: // mathExpr: mathExpr "&" mathExpr
+#line 176 "selectParser.yy"
+                             {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -827,12 +814,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 831 "selectParser.cc" // lalr1.cc:859
+#line 818 "selectParser.cc"
     break;
 
-  case 17:
-#line 188 "selectParser.yy" // lalr1.cc:859
-    {
+  case 17: // mathExpr: mathExpr "|" mathExpr
+#line 188 "selectParser.yy"
+                            {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[2].value.selectNode)
@@ -844,12 +831,12 @@ namespace ibis {
     opr->setLeft((yystack_[2].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 848 "selectParser.cc" // lalr1.cc:859
+#line 835 "selectParser.cc"
     break;
 
-  case 18:
-#line 200 "selectParser.yy" // lalr1.cc:859
-    {
+  case 18: // mathExpr: "name" '(' "*" ')'
+#line 200 "selectParser.yy"
+                         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << "(*)";
@@ -868,12 +855,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     (yylhs.value.selectNode) = fun;
 }
-#line 872 "selectParser.cc" // lalr1.cc:859
+#line 859 "selectParser.cc"
     break;
 
-  case 19:
-#line 219 "selectParser.yy" // lalr1.cc:859
-    {
+  case 19: // mathExpr: "name" '(' mathExpr ')'
+#line 219 "selectParser.yy"
+                           {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- " << *(yystack_[3].value.stringVal) << "("
@@ -1077,12 +1064,12 @@ namespace ibis {
     delete (yystack_[3].value.stringVal);
     (yylhs.value.selectNode) = fun;
 }
-#line 1081 "selectParser.cc" // lalr1.cc:859
+#line 1068 "selectParser.cc"
     break;
 
-  case 20:
-#line 423 "selectParser.yy" // lalr1.cc:859
-    {
+  case 20: // mathExpr: "FORMAT_UNIXTIME_GMT" '(' mathExpr ',' "name" ')'
+#line 423 "selectParser.yy"
+                                                   {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FORMAT_UNIXTIME_GMT("
@@ -1094,12 +1081,12 @@ namespace ibis {
     (yylhs.value.selectNode) = fun;
     delete (yystack_[1].value.stringVal);
 }
-#line 1098 "selectParser.cc" // lalr1.cc:859
+#line 1085 "selectParser.cc"
     break;
 
-  case 21:
-#line 435 "selectParser.yy" // lalr1.cc:859
-    {
+  case 21: // mathExpr: "FORMAT_UNIXTIME_GMT" '(' mathExpr ',' "string literal" ')'
+#line 435 "selectParser.yy"
+                                                  {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FORMAT_UNIXTIME_GMT("
@@ -1111,12 +1098,12 @@ namespace ibis {
     (yylhs.value.selectNode) = fun;
     delete (yystack_[1].value.stringVal);
 }
-#line 1115 "selectParser.cc" // lalr1.cc:859
+#line 1102 "selectParser.cc"
     break;
 
-  case 22:
-#line 447 "selectParser.yy" // lalr1.cc:859
-    {
+  case 22: // mathExpr: "FORMAT_UNIXTIME_LOCAL" '(' mathExpr ',' "name" ')'
+#line 447 "selectParser.yy"
+                                                     {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FORMAT_UNIXTIME_LOCAL("
@@ -1128,12 +1115,12 @@ namespace ibis {
     (yylhs.value.selectNode) = fun;
     delete (yystack_[1].value.stringVal);
 }
-#line 1132 "selectParser.cc" // lalr1.cc:859
+#line 1119 "selectParser.cc"
     break;
 
-  case 23:
-#line 459 "selectParser.yy" // lalr1.cc:859
-    {
+  case 23: // mathExpr: "FORMAT_UNIXTIME_LOCAL" '(' mathExpr ',' "string literal" ')'
+#line 459 "selectParser.yy"
+                                                    {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- FORMAT_UNIXTIME_LOCAL("
@@ -1145,12 +1132,12 @@ namespace ibis {
     (yylhs.value.selectNode) = fun;
     delete (yystack_[1].value.stringVal);
 }
-#line 1149 "selectParser.cc" // lalr1.cc:859
+#line 1136 "selectParser.cc"
     break;
 
-  case 24:
-#line 471 "selectParser.yy" // lalr1.cc:859
-    {
+  case 24: // mathExpr: "name" '(' mathExpr ',' mathExpr ')'
+#line 471 "selectParser.yy"
+                                        {
     /* two-arugment math functions */
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
@@ -1164,12 +1151,12 @@ namespace ibis {
     (yylhs.value.selectNode) = fun;
     delete (yystack_[5].value.stringVal);
 }
-#line 1168 "selectParser.cc" // lalr1.cc:859
+#line 1155 "selectParser.cc"
     break;
 
-  case 25:
-#line 485 "selectParser.yy" // lalr1.cc:859
-    {
+  case 25: // mathExpr: "-" mathExpr
+#line 485 "selectParser.yy"
+                               {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " parsing -- - " << *(yystack_[0].value.selectNode);
@@ -1179,28 +1166,28 @@ namespace ibis {
     opr->setRight((yystack_[0].value.selectNode));
     (yylhs.value.selectNode) = opr;
 }
-#line 1183 "selectParser.cc" // lalr1.cc:859
+#line 1170 "selectParser.cc"
     break;
 
-  case 26:
-#line 495 "selectParser.yy" // lalr1.cc:859
-    {
+  case 26: // mathExpr: "+" mathExpr
+#line 495 "selectParser.yy"
+                             {
     (yylhs.value.selectNode) = (yystack_[0].value.selectNode);
 }
-#line 1191 "selectParser.cc" // lalr1.cc:859
+#line 1178 "selectParser.cc"
     break;
 
-  case 27:
-#line 498 "selectParser.yy" // lalr1.cc:859
-    {
+  case 27: // mathExpr: '(' mathExpr ')'
+#line 498 "selectParser.yy"
+                   {
     (yylhs.value.selectNode) = (yystack_[1].value.selectNode);
 }
-#line 1199 "selectParser.cc" // lalr1.cc:859
+#line 1186 "selectParser.cc"
     break;
 
-  case 28:
-#line 501 "selectParser.yy" // lalr1.cc:859
-    {
+  case 28: // mathExpr: "name"
+#line 501 "selectParser.yy"
+          {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " got a variable name " << *(yystack_[0].value.stringVal);
@@ -1208,12 +1195,12 @@ namespace ibis {
     (yylhs.value.selectNode) = new ibis::math::variable((yystack_[0].value.stringVal)->c_str());
     delete (yystack_[0].value.stringVal);
 }
-#line 1212 "selectParser.cc" // lalr1.cc:859
+#line 1199 "selectParser.cc"
     break;
 
-  case 29:
-#line 509 "selectParser.yy" // lalr1.cc:859
-    {
+  case 29: // mathExpr: "string literal"
+#line 509 "selectParser.yy"
+         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " got a string literal " << *(yystack_[0].value.stringVal);
@@ -1221,41 +1208,45 @@ namespace ibis {
     (yylhs.value.selectNode) = new ibis::math::literal((yystack_[0].value.stringVal)->c_str());
     delete (yystack_[0].value.stringVal);
 }
-#line 1225 "selectParser.cc" // lalr1.cc:859
+#line 1212 "selectParser.cc"
     break;
 
-  case 30:
-#line 517 "selectParser.yy" // lalr1.cc:859
-    {
+  case 30: // mathExpr: "numerical value"
+#line 517 "selectParser.yy"
+         {
 #if defined(DEBUG) && DEBUG + 0 > 1
     LOGGER(ibis::gVerbose >= 0)
 	<< __FILE__ << ":" << __LINE__ << " got a number " << (yystack_[0].value.doubleVal);
 #endif
     (yylhs.value.selectNode) = new ibis::math::number((yystack_[0].value.doubleVal));
 }
-#line 1237 "selectParser.cc" // lalr1.cc:859
+#line 1224 "selectParser.cc"
     break;
 
 
-#line 1241 "selectParser.cc" // lalr1.cc:859
+#line 1228 "selectParser.cc"
+
             default:
               break;
             }
         }
+#if YY_EXCEPTIONS
       catch (const syntax_error& yyexc)
         {
+          YYCDEBUG << "Caught exception: " << yyexc.what() << '\n';
           error (yyexc);
           YYERROR;
         }
+#endif // YY_EXCEPTIONS
       YY_SYMBOL_PRINT ("-> $$ =", yylhs);
       yypop_ (yylen);
       yylen = 0;
-      YY_STACK_PRINT ();
 
       // Shift the result of the reduction.
-      yypush_ (YY_NULLPTR, yylhs);
+      yypush_ (YY_NULLPTR, YY_MOVE (yylhs));
     }
     goto yynewstate;
+
 
   /*--------------------------------------.
   | yyerrlab -- here on detecting error.  |
@@ -1265,7 +1256,9 @@ namespace ibis {
     if (!yyerrstatus_)
       {
         ++yynerrs_;
-        error (yyla.location, yysyntax_error_ (yystack_[0].state, yyla));
+        context yyctx (*this, yyla);
+        std::string msg = yysyntax_error_ (yyctx);
+        error (yyla.location, YY_MOVE (msg));
       }
 
 
@@ -1276,7 +1269,7 @@ namespace ibis {
            error, discard it.  */
 
         // Return failure if at end of input.
-        if (yyla.type_get () == yyeof_)
+        if (yyla.kind () == symbol_kind::S_YYEOF)
           YYABORT;
         else if (!yyla.empty ())
           {
@@ -1293,69 +1286,81 @@ namespace ibis {
   | yyerrorlab -- error raised explicitly by YYERROR.  |
   `---------------------------------------------------*/
   yyerrorlab:
-
-    /* Pacify compilers like GCC when the user code never invokes
-       YYERROR and the label yyerrorlab therefore never appears in user
-       code.  */
+    /* Pacify compilers when the user code never invokes YYERROR and
+       the label yyerrorlab therefore never appears in user code.  */
     if (false)
-      goto yyerrorlab;
-    yyerror_range[1].location = yystack_[yylen - 1].location;
+      YYERROR;
+
     /* Do not reclaim the symbols of the rule whose action triggered
        this YYERROR.  */
     yypop_ (yylen);
     yylen = 0;
+    YY_STACK_PRINT ();
     goto yyerrlab1;
+
 
   /*-------------------------------------------------------------.
   | yyerrlab1 -- common code for both syntax error and YYERROR.  |
   `-------------------------------------------------------------*/
   yyerrlab1:
     yyerrstatus_ = 3;   // Each real token shifted decrements this.
+    // Pop stack until we find a state that shifts the error token.
+    for (;;)
+      {
+        yyn = yypact_[+yystack_[0].state];
+        if (!yy_pact_value_is_default_ (yyn))
+          {
+            yyn += symbol_kind::S_YYerror;
+            if (0 <= yyn && yyn <= yylast_
+                && yycheck_[yyn] == symbol_kind::S_YYerror)
+              {
+                yyn = yytable_[yyn];
+                if (0 < yyn)
+                  break;
+              }
+          }
+
+        // Pop the current state because it cannot handle the error token.
+        if (yystack_.size () == 1)
+          YYABORT;
+
+        yyerror_range[1].location = yystack_[0].location;
+        yy_destroy_ ("Error: popping", yystack_[0]);
+        yypop_ ();
+        YY_STACK_PRINT ();
+      }
     {
       stack_symbol_type error_token;
-      for (;;)
-        {
-          yyn = yypact_[yystack_[0].state];
-          if (!yy_pact_value_is_default_ (yyn))
-            {
-              yyn += yyterror_;
-              if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
-                {
-                  yyn = yytable_[yyn];
-                  if (0 < yyn)
-                    break;
-                }
-            }
-
-          // Pop the current state because it cannot handle the error token.
-          if (yystack_.size () == 1)
-            YYABORT;
-
-          yyerror_range[1].location = yystack_[0].location;
-          yy_destroy_ ("Error: popping", yystack_[0]);
-          yypop_ ();
-          YY_STACK_PRINT ();
-        }
 
       yyerror_range[2].location = yyla.location;
       YYLLOC_DEFAULT (error_token.location, yyerror_range, 2);
 
       // Shift the error token.
-      error_token.state = yyn;
-      yypush_ ("Shifting", error_token);
+      error_token.state = state_type (yyn);
+      yypush_ ("Shifting", YY_MOVE (error_token));
     }
     goto yynewstate;
 
-    // Accept.
+
+  /*-------------------------------------.
+  | yyacceptlab -- YYACCEPT comes here.  |
+  `-------------------------------------*/
   yyacceptlab:
     yyresult = 0;
     goto yyreturn;
 
-    // Abort.
+
+  /*-----------------------------------.
+  | yyabortlab -- YYABORT comes here.  |
+  `-----------------------------------*/
   yyabortlab:
     yyresult = 1;
     goto yyreturn;
 
+
+  /*-----------------------------------------------------.
+  | yyreturn -- parsing is finished, return the result.  |
+  `-----------------------------------------------------*/
   yyreturn:
     if (!yyla.empty ())
       yy_destroy_ ("Cleanup: discarding lookahead", yyla);
@@ -1363,6 +1368,7 @@ namespace ibis {
     /* Do not reclaim the symbols of the rule whose action triggered
        this YYABORT or YYACCEPT.  */
     yypop_ (yylen);
+    YY_STACK_PRINT ();
     while (1 < yystack_.size ())
       {
         yy_destroy_ ("Cleanup: popping", yystack_[0]);
@@ -1371,12 +1377,12 @@ namespace ibis {
 
     return yyresult;
   }
+#if YY_EXCEPTIONS
     catch (...)
       {
-        YYCDEBUG << "Exception caught: cleaning lookahead and stack"
-                 << std::endl;
+        YYCDEBUG << "Exception caught: cleaning lookahead and stack\n";
         // Do not try to display the values of the reclaimed symbols,
-        // as their printer might throw an exception.
+        // as their printers might throw an exception.
         if (!yyla.empty ())
           yy_destroy_ (YY_NULLPTR, yyla);
 
@@ -1387,26 +1393,109 @@ namespace ibis {
           }
         throw;
       }
+#endif // YY_EXCEPTIONS
   }
 
   void
   selectParser::error (const syntax_error& yyexc)
   {
-    error (yyexc.location, yyexc.what());
+    error (yyexc.location, yyexc.what ());
   }
 
-  // Generate an error message.
+  /* Return YYSTR after stripping away unnecessary quotes and
+     backslashes, so that it's suitable for yyerror.  The heuristic is
+     that double-quoting is unnecessary unless the string contains an
+     apostrophe, a comma, or backslash (other than backslash-backslash).
+     YYSTR is taken from yytname.  */
   std::string
-  selectParser::yysyntax_error_ (state_type yystate, const symbol_type& yyla) const
+  selectParser::yytnamerr_ (const char *yystr)
   {
-    // Number of reported tokens (one for the "unexpected", one per
-    // "expected").
-    size_t yycount = 0;
-    // Its maximum.
-    enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
-    // Arguments of yyformat.
-    char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+    if (*yystr == '"')
+      {
+        std::string yyr;
+        char const *yyp = yystr;
 
+        for (;;)
+          switch (*++yyp)
+            {
+            case '\'':
+            case ',':
+              goto do_not_strip_quotes;
+
+            case '\\':
+              if (*++yyp != '\\')
+                goto do_not_strip_quotes;
+              else
+                goto append;
+
+            append:
+            default:
+              yyr += *yyp;
+              break;
+
+            case '"':
+              return yyr;
+            }
+      do_not_strip_quotes: ;
+      }
+
+    return yystr;
+  }
+
+  std::string
+  selectParser::symbol_name (symbol_kind_type yysymbol)
+  {
+    return yytnamerr_ (yytname_[yysymbol]);
+  }
+
+
+
+  // selectParser::context.
+  selectParser::context::context (const selectParser& yyparser, const symbol_type& yyla)
+    : yyparser_ (yyparser)
+    , yyla_ (yyla)
+  {}
+
+  int
+  selectParser::context::expected_tokens (symbol_kind_type yyarg[], int yyargn) const
+  {
+    // Actual number of expected tokens
+    int yycount = 0;
+
+    int yyn = yypact_[+yyparser_.yystack_[0].state];
+    if (!yy_pact_value_is_default_ (yyn))
+      {
+        /* Start YYX at -YYN if negative to avoid negative indexes in
+           YYCHECK.  In other words, skip the first -YYN actions for
+           this state because they are default actions.  */
+        int yyxbegin = yyn < 0 ? -yyn : 0;
+        // Stay within bounds of both yycheck and yytname.
+        int yychecklim = yylast_ - yyn + 1;
+        int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+        for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
+          if (yycheck_[yyx + yyn] == yyx && yyx != symbol_kind::S_YYerror
+              && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
+            {
+              if (!yyarg)
+                ++yycount;
+              else if (yycount == yyargn)
+                return 0;
+              else
+                yyarg[yycount++] = YY_CAST (symbol_kind_type, yyx);
+            }
+      }
+
+    if (yyarg && yycount == 0 && 0 < yyargn)
+      yyarg[0] = symbol_kind::S_YYEMPTY;
+    return yycount;
+  }
+
+
+
+  int
+  selectParser::yy_syntax_error_arguments_ (const context& yyctx,
+                                                 symbol_kind_type yyarg[], int yyargn) const
+  {
     /* There are many possibilities here to consider:
        - If this state is a consistent state with a default action, then
          the only way this function was invoked is if the default action
@@ -1425,41 +1514,32 @@ namespace ibis {
        - Of course, the expected token list depends on states to have
          correct lookahead information, and it depends on the parser not
          to perform extra reductions after fetching a lookahead from the
-         scanner and before detecting a syntax error.  Thus, state
-         merging (from LALR or IELR) and default reductions corrupt the
-         expected token list.  However, the list is correct for
-         canonical LR with one exception: it will still contain any
-         token that will not be accepted due to an error action in a
-         later state.
+         scanner and before detecting a syntax error.  Thus, state merging
+         (from LALR or IELR) and default reductions corrupt the expected
+         token list.  However, the list is correct for canonical LR with
+         one exception: it will still contain any token that will not be
+         accepted due to an error action in a later state.
     */
-    if (!yyla.empty ())
+
+    if (!yyctx.lookahead ().empty ())
       {
-        int yytoken = yyla.type_get ();
-        yyarg[yycount++] = yytname_[yytoken];
-        int yyn = yypact_[yystate];
-        if (!yy_pact_value_is_default_ (yyn))
-          {
-            /* Start YYX at -YYN if negative to avoid negative indexes in
-               YYCHECK.  In other words, skip the first -YYN actions for
-               this state because they are default actions.  */
-            int yyxbegin = yyn < 0 ? -yyn : 0;
-            // Stay within bounds of both yycheck and yytname.
-            int yychecklim = yylast_ - yyn + 1;
-            int yyxend = yychecklim < yyntokens_ ? yychecklim : yyntokens_;
-            for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
-              if (yycheck_[yyx + yyn] == yyx && yyx != yyterror_
-                  && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
-                {
-                  if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
-                    {
-                      yycount = 1;
-                      break;
-                    }
-                  else
-                    yyarg[yycount++] = yytname_[yyx];
-                }
-          }
+        if (yyarg)
+          yyarg[0] = yyctx.token ();
+        int yyn = yyctx.expected_tokens (yyarg ? yyarg + 1 : yyarg, yyargn - 1);
+        return yyn + 1;
       }
+    return 0;
+  }
+
+  // Generate an error message.
+  std::string
+  selectParser::yysyntax_error_ (const context& yyctx) const
+  {
+    // Its maximum.
+    enum { YYARGS_MAX = 5 };
+    // Arguments of yyformat.
+    symbol_kind_type yyarg[YYARGS_MAX];
+    int yycount = yy_syntax_error_arguments_ (yyctx, yyarg, YYARGS_MAX);
 
     char const* yyformat = YY_NULLPTR;
     switch (yycount)
@@ -1468,22 +1548,23 @@ namespace ibis {
         case N:                               \
           yyformat = S;                       \
         break
-        YYCASE_(0, YY_("syntax error"));
-        YYCASE_(1, YY_("syntax error, unexpected %s"));
-        YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
-        YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
-        YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
-        YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+      default: // Avoid compiler warnings.
+        YYCASE_ (0, YY_("syntax error"));
+        YYCASE_ (1, YY_("syntax error, unexpected %s"));
+        YYCASE_ (2, YY_("syntax error, unexpected %s, expecting %s"));
+        YYCASE_ (3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+        YYCASE_ (4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+        YYCASE_ (5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
 #undef YYCASE_
       }
 
     std::string yyres;
     // Argument number.
-    size_t yyi = 0;
+    std::ptrdiff_t yyi = 0;
     for (char const* yyp = yyformat; *yyp; ++yyp)
       if (yyp[0] == '%' && yyp[1] == 's' && yyi < yycount)
         {
-          yyres += yytnamerr_ (yyarg[yyi++]);
+          yyres += symbol_name (yyarg[yyi++]);
           ++yyp;
         }
       else
@@ -1508,7 +1589,7 @@ namespace ibis {
      -13,   -13,   -13,   -13,   -13
   };
 
-  const unsigned char
+  const signed char
   selectParser::yydefact_[] =
   {
        0,     0,     0,    30,    28,    29,     0,     0,     0,     0,
@@ -1529,10 +1610,10 @@ namespace ibis {
   const signed char
   selectParser::yydefgoto_[] =
   {
-      -1,     9,    10,    11
+       0,     9,    10,    11
   };
 
-  const unsigned char
+  const signed char
   selectParser::yytable_[] =
   {
       12,    13,    46,    53,    56,    57,    14,    17,    26,    27,
@@ -1572,7 +1653,7 @@ namespace ibis {
       14,    15,    16,    -1,    18
   };
 
-  const unsigned char
+  const signed char
   selectParser::yystos_[] =
   {
        0,     6,     7,    12,    13,    14,    15,    16,    18,    21,
@@ -1584,7 +1665,7 @@ namespace ibis {
       19,    19,    19,    19,    19
   };
 
-  const unsigned char
+  const signed char
   selectParser::yyr1_[] =
   {
        0,    20,    21,    21,    22,    22,    22,    22,    22,    22,
@@ -1593,7 +1674,7 @@ namespace ibis {
       23
   };
 
-  const unsigned char
+  const signed char
   selectParser::yyr2_[] =
   {
        0,     2,     1,     2,     2,     2,     3,     3,     4,     4,
@@ -1603,21 +1684,23 @@ namespace ibis {
   };
 
 
-
+#if YYDEBUG || 1
   // YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-  // First, the terminals, then, starting at \a yyntokens_, nonterminals.
+  // First, the terminals, then, starting at \a YYNTOKENS, nonterminals.
   const char*
   const selectParser::yytname_[] =
   {
-  "\"end of input\"", "error", "$undefined", "\"as\"", "\"|\"", "\"&\"",
-  "\"+\"", "\"-\"", "\"*\"", "\"/\"", "\"%\"", "\"**\"",
+  "\"end of input\"", "error", "\"invalid token\"", "\"as\"", "\"|\"",
+  "\"&\"", "\"+\"", "\"-\"", "\"*\"", "\"/\"", "\"%\"", "\"**\"",
   "\"numerical value\"", "\"name\"", "\"string literal\"",
   "\"FORMAT_UNIXTIME_GMT\"", "\"FORMAT_UNIXTIME_LOCAL\"", "','", "'('",
   "')'", "$accept", "slist", "sterm", "mathExpr", YY_NULLPTR
   };
+#endif
+
 
 #if YYDEBUG
-  const unsigned short int
+  const short
   selectParser::yyrline_[] =
   {
        0,    78,    78,    78,    79,    82,    85,    89,    93,    97,
@@ -1626,28 +1709,26 @@ namespace ibis {
      517
   };
 
-  // Print the state stack on the debug stream.
   void
-  selectParser::yystack_print_ ()
+  selectParser::yy_stack_print_ () const
   {
     *yycdebug_ << "Stack now";
     for (stack_type::const_iterator
            i = yystack_.begin (),
            i_end = yystack_.end ();
          i != i_end; ++i)
-      *yycdebug_ << ' ' << i->state;
-    *yycdebug_ << std::endl;
+      *yycdebug_ << ' ' << int (i->state);
+    *yycdebug_ << '\n';
   }
 
-  // Report on the debug stream that the rule \a yyrule is going to be reduced.
   void
-  selectParser::yy_reduce_print_ (int yyrule)
+  selectParser::yy_reduce_print_ (int yyrule) const
   {
-    unsigned int yylno = yyrline_[yyrule];
+    int yylno = yyrline_[yyrule];
     int yynrhs = yyr2_[yyrule];
     // Print the symbols being reduced, and their result.
     *yycdebug_ << "Reducing stack by rule " << yyrule - 1
-               << " (line " << yylno << "):" << std::endl;
+               << " (line " << yylno << "):\n";
     // The symbols being reduced.
     for (int yyi = 0; yyi < yynrhs; yyi++)
       YY_SYMBOL_PRINT ("   $" << yyi + 1 << " =",
@@ -1655,16 +1736,16 @@ namespace ibis {
   }
 #endif // YYDEBUG
 
-  // Symbol number corresponding to token number t.
-  inline
-  selectParser::token_number_type
+  selectParser::symbol_kind_type
   selectParser::yytranslate_ (int t)
   {
+    // YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to
+    // TOKEN-NUM as returned by yylex.
     static
-    const token_number_type
+    const signed char
     translate_table[] =
     {
-     0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1693,21 +1774,22 @@ namespace ibis {
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16
     };
-    const unsigned int user_token_number_max_ = 271;
-    const token_number_type undef_token_ = 2;
+    // Last valid token kind.
+    const int code_max = 271;
 
-    if (static_cast<int>(t) <= yyeof_)
-      return yyeof_;
-    else if (static_cast<unsigned int> (t) <= user_token_number_max_)
-      return translate_table[t];
+    if (t <= 0)
+      return symbol_kind::S_YYEOF;
+    else if (t <= code_max)
+      return YY_CAST (symbol_kind_type, translate_table[t]);
     else
-      return undef_token_;
+      return symbol_kind::S_YYUNDEF;
   }
 
-#line 23 "selectParser.yy" // lalr1.cc:1167
+#line 23 "selectParser.yy"
 } // ibis
-#line 1710 "selectParser.cc" // lalr1.cc:1167
-#line 526 "selectParser.yy" // lalr1.cc:1168
+#line 1791 "selectParser.cc"
+
+#line 526 "selectParser.yy"
 
 void ibis::selectParser::error(const ibis::selectParser::location_type& l,
 			       const std::string& m) {

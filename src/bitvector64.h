@@ -131,7 +131,8 @@ public:
 
     /// Return the number of bits that are one.
     word_t cnt() const {
-	if (nset==0) do_cnt(); return (nset+cnt_ones(active.val));
+	if (nset==0) do_cnt();
+        return (nset+cnt_ones(active.val));
     };
 
     /// Return the total number of bits in the bit sequence.

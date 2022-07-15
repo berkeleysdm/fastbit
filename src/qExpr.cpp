@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
-// Copyright (c) 1998-2016 the Regents of the University of California
+// Copyright (c) 1998-2020 the Regents of the University of California
 //
 // implement the functions defined in qExpr.h
 //
@@ -1667,11 +1667,11 @@ bool ibis::qContinuousRange::inRange(double val) const {
 } // ibis::qContinuousRange::inRange
 
 // Does the given range overlap with the query range?  Returns true for
-// yes, false for no.  The arguements lo and hi are both included in the
-// range specified.  This is consistent with how the the two arguments to
-// the SQL clause "v between a and b."
+// yes, false for no.  The arguements @c lo and @c hi are both included in
+// the range specified.  This is consistent with how one interprets the two
+// arguments to the SQL clause "v between a and b."
 bool ibis::qContinuousRange::overlap(double lo, double hi) const {
-    if (! (lo <= hi)) { // invalue (lo, hi) pair, assume overlap
+    if (! (lo <= hi)) { // invalid (lo, hi) pair, assume overlap
         return true;
     }
 

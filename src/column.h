@@ -1,6 +1,6 @@
 //File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 #ifndef IBIS_COLUMN_H
 #define IBIS_COLUMN_H
 ///@file
@@ -346,6 +346,9 @@ public:
     /// executed successfully, the return value should be the same as the
     /// size of array @c counts, and one larger than the size of array @c
     /// bbs.
+    ///
+    /// Returns the number of bins (counts.size()) upon successful
+    /// completion, otherwise returns a negative values to indicate error.
     long getDistribution(std::vector<double>& bbs,
 			 std::vector<uint32_t>& counts) const;
     /// @}
@@ -415,8 +418,8 @@ protected:
     std::string m_desc;	  ///!< Free-form description of the column.
     std::string m_bins;	  ///!< Index/binning specification.
     bool m_sorted;	  ///!< Are the column values in ascending order?
-    double lower;	  ///!< The minimum value.
-    double upper;	  ///!< The maximum value.
+    double lower;	  ///!< The nominal minimum value from the metadata file.
+    double upper;	  ///!< The nominal maximum value from the metadata file.
     unixTimeScribe *m_utscribe;
     /// Presence of the data file.
     ///  0 -- don't know.

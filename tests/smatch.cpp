@@ -17,7 +17,7 @@
    -- Webster's Revised Unabridged Dictionary, 1998
  */
 #include "ibis.h"
-#include <memory>	// std::auto_ptr
+#include <memory>	// std::unique_ptr
 
 /// Encapsulate the testing functions.
 class tester {
@@ -46,7 +46,7 @@ tester::~tester() {
 /// ibis::table::row.
 void tester::builtindata(const char *datadir) {
     ibis::table::row irow;
-    std::auto_ptr<ibis::tablex> ta(ibis::tablex::create());
+    std::unique_ptr<ibis::tablex> ta(ibis::tablex::create());
 
     ta->addColumn("s", ibis::TEXT);
 
@@ -143,7 +143,7 @@ void tester::load(const char *datadir) {
     if (datadir == 0 || *datadir == 0) return;
 
     try { // use existing data records
-	std::auto_ptr<ibis::table> table(ibis::table::create(datadir));
+	std::unique_ptr<ibis::table> table(ibis::table::create(datadir));
 	if (table.get() == 0) {
 	    LOGGER(ibis::gVerbose >= 0)
 		<< "failed to load table from " << datadir;
@@ -155,7 +155,7 @@ void tester::load(const char *datadir) {
 	    table->addPartition(datadir);
 	}
 
-	std::auto_ptr<ibis::table> select(table->select("", "1=1"));
+	std::unique_ptr<ibis::table> select(table->select("", "1=1"));
 	if (select.get() == 0) {
 	    LOGGER(ibis::gVerbose >= 0)
 		<< "failed to select all rows from table " << table->name();
@@ -178,7 +178,7 @@ void tester::load(const char *datadir) {
 void tester::query(const char *datadir, const char *where) {
     if (datadir == 0 || where == 0 || *datadir == 0 || *where == 0) return;
 
-    std::auto_ptr<ibis::table> table(ibis::table::create(datadir));
+    std::unique_ptr<ibis::table> table(ibis::table::create(datadir));
     if (table.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to load table from " << datadir;
@@ -202,7 +202,7 @@ void tester::query(const char *datadir, const char *where) {
 	    << " in " << datadir;
 	return;
     }
-    std::auto_ptr<ibis::table> select(table->select(cnames.front(), where));
+    std::unique_ptr<ibis::table> select(table->select(cnames.front(), where));
     if (select.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to select \"" << where << "\" on table "
@@ -212,7 +212,7 @@ void tester::query(const char *datadir, const char *where) {
 
     std::cout << "Number of rows satisfying \"" << where << "\": "
 	      << select->nRows() << std::endl;
-    std::auto_ptr<ibis::table::cursor> cur(select->createCursor());
+    std::unique_ptr<ibis::table::cursor> cur(select->createCursor());
     if (cur.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to create a cursor from the result table named "

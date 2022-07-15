@@ -16,14 +16,15 @@
 }
 
 /* bison declarations */
-%require "2.7"
+%require "3.0"
 %debug
-%error-verbose
+%expect 2
+%define parse.error verbose
 %start START
 %defines
 %skeleton "lalr1.cc"
 %define api.namespace {ibis}
-%define parser_class_name {whereParser}
+%define api.parser.class {whereParser}
 %locations
      /*%expect 1*/
 %initial-action
@@ -75,8 +76,8 @@
 %token <integerVal> DIVOP	"/"
 %token <integerVal> REMOP	"%"
 %token <integerVal> EXPOP	"**"
-%token <int64Val>   INT64	"integer value"
-%token <uint64Val>  UINT64	"unsigned integer value"
+%token <int64Val>   INT64	"(64-bit) integer value"
+%token <uint64Val>  UINT64	"unsigned (64-bit) integer value"
 %token <doubleVal>  NUMBER	"floating-point number"
 %token <stringVal>  INTSEQ	"signed integer sequence"
 %token <stringVal>  UINTSEQ	"unsigned integer sequence"

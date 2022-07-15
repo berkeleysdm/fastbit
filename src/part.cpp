@@ -1,6 +1,6 @@
 // File $Id$
 // Author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 //
 // Implementation of the ibis::part functions except those that modify the
 // content of a partition (which are in parti.cpp), or perform self joins
@@ -47,7 +47,7 @@
 // A higher quality random number generator within the file scope.  Use a
 // function to (possibly) delay the invocation of the constructor.
 static ibis::MersenneTwister& _ibis_part_urand() {
-    static ibis::MersenneTwister mt;
+    static ibis::MersenneTwister mt(11311);
     return mt;
 } // _ibis_part_urand
 
@@ -108,7 +108,7 @@ extern "C" {
         const ibis::part *et0 = myList->et;
         const time_t myid = ibis::fileManager::iBeat();
         LOGGER(ibis::gVerbose > 2)
-            << "INFO: thread (local id " << myid
+            << "Info -- thread (local id " << myid
             << ") start evaluating queries on partition " << et0->name();
 
         try {
@@ -134,7 +134,7 @@ extern "C" {
             }
             (*myList->nerrors) += myerr;
             LOGGER(ibis::gVerbose > 2)
-                << "INFO: thread " << myid << " completed " << mycnt
+                << "Info -- thread " << myid << " completed " << mycnt
                 << " set" << (mycnt > 1 ? "s" : "")
                 << " of range conditions and encountered " << myerr << " error"
                 << (myerr > 1 ? "s" : "") << " during query evaluations";
@@ -7044,6 +7044,7 @@ long ibis::part::selfTest(int nth, const char* pref) const {
             }
             longtest = ibis::gParameters().isTrue(ltest.c_str());
         }
+
         if (nth > 1) {
             // select some attributes for further testing -- do part of the
             // work in new threads
@@ -7224,6 +7225,8 @@ long ibis::part::selfTest(int nth, const char* pref) const {
 /// Randomly select a column and perform a set of tests recursively.
 void ibis::part::queryTest(const char* pref, long* nerrors) const {
     if (columns.empty() || nEvents == 0) return;
+    LOGGER(ibis::gVerbose > 1)
+        << "Info -- entering part[" << name() << "]::queryTest ...";
 
     // select a colum to perform the test on
     int i = (static_cast<int>(ibis::util::rand() * columns.size()) +
@@ -7319,9 +7322,11 @@ void ibis::part::queryTest(const char* pref, long* nerrors) const {
 /// tests on the column.
 void ibis::part::quickTest(const char* pref, long* nerrors) const {
     if (columns.empty() || nEvents == 0) return;
+    LOGGER(ibis::gVerbose > 1)
+        << "Info -- entering part[" << name() << "]::quickTest ...";
 
     char clause[MAX_LINE];
-    // select a colum to perform the test on
+    // select a colum to perform the tests on
     columnList::const_iterator it = columns.begin();
     {
         int i = (static_cast<int>(ibis::util::rand() * columns.size()) +
@@ -7829,16 +7834,16 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
     uint32_t cnt0, cnt1, cnt2, cnt3;
     double mid1, mid2;
     {// use a block to limit the scope of query object
-        char predicate[MAX_LINE];
-        sprintf(predicate, "%g <= %s < %g", low, att->name(), high);
+        std::ostringstream predicate;
+        predicate << low << " <= " << att->name() << " < " << high;
         query qtmp("[:]", this, pref);
         qtmp.setSelectClause(att->name());
-        qtmp.setWhereClause(predicate);
+        qtmp.setWhereClause(predicate.str().c_str());
         const char *str = qtmp.getLastError();
         if (str != 0 && *str != static_cast<char>(0)) {
             ibis::util::logger lg;
             lg() << "Warning -- part::queryTest last error on "
-                 << "query \"" << predicate << "\" is \n" << str;
+                 << "query \"" << predicate.str() << "\" is \n" << str;
             qtmp.clearErrorMessage();
             ++(*nerrors);
         }
@@ -7866,7 +7871,7 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
         if (str != 0 && *str != static_cast<char>(0)) {
             ibis::util::logger lg;
             lg() << "Warning -- part::queryTest last error on "
-                 << "query \"" << predicate << "\" is \n" << str;
+                 << "query \"" << predicate.str() << "\" is \n" << str;
             qtmp.clearErrorMessage();
             ++(*nerrors);
         }
@@ -7887,7 +7892,7 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
                 ++(*nerrors);
                 logWarning("queryTest", "a sequential scan on \"%s\" produced "
                            "%lu, but the function evaluate produced %lu",
-                           predicate,
+                           predicate.str().c_str(),
                            static_cast<long unsigned>(seqhits.cnt()),
                            static_cast<long unsigned>(cnt0));
             }
@@ -7896,7 +7901,7 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
                 if (seqhits.cnt() > 0) {
                     ++(*nerrors);
                     logWarning("queryTest", "sequential scan on \"%s\" "
-                               "produced %lu different result%s", predicate,
+                               "produced %lu different result%s", predicate.str().c_str(),
                                static_cast<long unsigned>(seqhits.cnt()),
                                (seqhits.cnt() > 1 ? "s" : ""));
 #if DEBUG+0 > 0 || _DEBUG+0 > 0
@@ -7913,8 +7918,9 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
         }
 
         if (low == att->lowerBound() && high == att->upperBound()) {
-            sprintf(predicate, "%s < %g", att->name(), low);
-            qtmp.setWhereClause(predicate);
+            predicate.clear();
+            predicate << att->name() << " < " << low;
+            qtmp.setWhereClause(predicate.str().c_str());
             ierr = qtmp.evaluate();
             if (ierr < 0) { // unload all indexes, try once more
                 ibis::util::mutexLock lock(&mutex, "part::queryTest");
@@ -7928,8 +7934,10 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
                 cnt1 = 0;
                 ++ (*nerrors);
             }
-            sprintf(predicate, "%s >= %g", att->name(), high);
-            qtmp.setWhereClause(predicate);
+
+            predicate.clear();
+            predicate << att->name() << " >= " << high;
+            qtmp.setWhereClause(predicate.str().c_str());
             ierr = qtmp.evaluate();
             if (ierr < 0) { // unload all indexes, try once more
                 ibis::util::mutexLock lock(&mutex, "part::queryTest");
@@ -7978,7 +7986,7 @@ uint32_t ibis::part::recursiveQuery(const char* pref, const column* att,
 
     mid1 = high - low;
     double range = att->upperBound() - att->lowerBound();
-    if ((mid1*64 > range) && (cnt0*256 > nEvents)) {
+    if ((mid1*64 > range) && (cnt0 > (nEvents>>8))) {
         mid1 = ibis::util::compactValue(0.125*(low*7+high), 0.5*(low+high));
         mid2 = ibis::util::compactValue(mid1, 0.125*(low+high*7));
         if (att->type() != ibis::FLOAT &&
@@ -11287,10 +11295,10 @@ long ibis::part::doScan(const array_t<T> &vals,
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11303,18 +11311,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11327,28 +11335,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11357,28 +11365,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<T> >
-                         (std::less<T>(), leftBound),
+                         std::bind
+                         (std::less<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11387,14 +11395,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11406,14 +11414,14 @@ long ibis::part::doScan(const array_t<T> &vals,
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                     std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                     std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -11425,18 +11433,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11449,18 +11457,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11473,28 +11481,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11503,28 +11511,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less_equal<T> >
-                         (std::less_equal<T>(), leftBound),
+                         std::bind
+                         (std::less_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11533,14 +11541,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11552,14 +11560,14 @@ long ibis::part::doScan(const array_t<T> &vals,
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                     std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                     std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -11571,28 +11579,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11601,28 +11609,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11631,18 +11639,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11655,18 +11663,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater<T> >
-                         (std::greater<T>(), leftBound),
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11679,14 +11687,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11698,14 +11706,14 @@ long ibis::part::doScan(const array_t<T> &vals,
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                     std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                     std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -11717,28 +11725,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::less<T> >
-                         (std::less<T>(), rightBound),
+                         std::bind
+                         (std::less<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11747,28 +11755,28 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::less_equal<T> >
-                         (std::less_equal<T>(), rightBound),
+                         std::bind
+                         (std::less_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -11777,18 +11785,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::greater<T> >
-                         (std::greater<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11801,18 +11809,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::greater_equal<T> >
-                         (std::greater_equal<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11825,18 +11833,18 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater_equal<T> >
-                         (std::greater_equal<T>(), leftBound),
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -11848,14 +11856,14 @@ long ibis::part::doScan(const array_t<T> &vals,
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                     std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                     std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -11868,14 +11876,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                     if (uncomp)
                         ierr = doComp0
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                     else
                         ierr = doComp
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                 }
                 else {
@@ -11888,14 +11896,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                     if (uncomp)
                         ierr = doComp0
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                     else
                         ierr = doComp
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                 }
                 else {
@@ -11908,14 +11916,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                     if (uncomp)
                         ierr = doComp0
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                     else
                         ierr = doComp
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                 }
                 else {
@@ -11928,14 +11936,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                     if (uncomp)
                         ierr = doComp0
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                     else
                         ierr = doComp
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                 }
                 else {
@@ -11948,14 +11956,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                     if (uncomp)
                         ierr = doComp0
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                     else
                         ierr = doComp
                             (vals,
-                             std::bind1st< std::equal_to<T> >
-                             (std::equal_to<T>(), leftBound),
+                             std::bind
+                             (std::equal_to<T>(), leftBound, std::placeholders::_1),
                              mask, hits);
                 }
                 else {
@@ -11967,14 +11975,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                         std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                         std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 break;}
             }
@@ -11990,56 +11998,56 @@ long ibis::part::doScan(const array_t<T> &vals,
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             if (uncomp)
                 ierr = doComp0
                     (vals,
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
@@ -12047,14 +12055,14 @@ long ibis::part::doScan(const array_t<T> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::equal_to<T> >
-                         (std::equal_to<T>(), rightBound),
+                         std::bind
+                         (std::equal_to<T>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12109,6 +12117,7 @@ long ibis::part::doScan(const array_t<float> &vals,
         return hits.sloppyCount();
     }
 
+    const bool uncomp = ((mask.size() >> 8) < mask.cnt());
     switch (lop) {
     case ibis::qExpr::OP_LT: {
         switch (rop) {
@@ -12117,18 +12126,18 @@ long ibis::part::doScan(const array_t<float> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12141,18 +12150,18 @@ long ibis::part::doScan(const array_t<float> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12165,27 +12174,27 @@ long ibis::part::doScan(const array_t<float> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp(vals,
-                                  std::bind1st<std::less<double> >
-                                  (std::less<double>(), leftBound),
+                                  std::bind
+                                  (std::less<double>(), leftBound, std::placeholders::_1),
                                   mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12194,26 +12203,26 @@ long ibis::part::doScan(const array_t<float> &vals,
                 if (uncomp)
                     ierr = doComp0
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                         std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12221,13 +12230,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12238,13 +12247,13 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -12255,17 +12264,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12277,17 +12286,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12299,25 +12308,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12325,25 +12334,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12351,13 +12360,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12368,13 +12377,13 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -12385,25 +12394,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12411,25 +12420,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12437,17 +12446,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12459,17 +12468,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12481,13 +12490,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (rightBound < leftBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12498,13 +12507,13 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -12515,25 +12524,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12541,25 +12550,25 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12567,17 +12576,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12589,17 +12598,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12611,17 +12620,17 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (rightBound <= leftBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12632,13 +12641,13 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -12649,13 +12658,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -12667,13 +12676,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -12685,13 +12694,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -12703,13 +12712,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -12721,13 +12730,13 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -12738,13 +12747,13 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -12754,62 +12763,62 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12871,17 +12880,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12893,17 +12902,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12915,25 +12924,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12941,25 +12950,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less<double> >
-                         (std::less<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -12967,13 +12976,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -12984,13 +12993,13 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -13001,17 +13010,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13023,17 +13032,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
-                         std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13045,25 +13054,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13071,25 +13080,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st<std::less_equal<double> >
-                         (std::less_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13097,13 +13106,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13114,13 +13123,13 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -13131,25 +13140,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13157,26 +13166,26 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
                         (vals,
-                         std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
+                         std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13184,17 +13193,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13206,17 +13215,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater<double> >
-                         (std::greater<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13228,13 +13237,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (rightBound < leftBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13245,13 +13254,13 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -13262,25 +13271,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less<double> >
-                         (std::less<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13288,25 +13297,25 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::less_equal<double> >
-                         (std::less_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::less_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             break;}
@@ -13314,17 +13323,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater<double> >
-                         (std::greater<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13336,17 +13345,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::greater_equal<double> >
-                         (std::greater_equal<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13358,17 +13367,17 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (rightBound <= leftBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::greater_equal<double> >
-                         (std::greater_equal<double>(), leftBound),
-                         std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                         std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13379,13 +13388,13 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -13396,13 +13405,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -13414,13 +13423,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -13432,13 +13441,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -13450,13 +13459,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -13468,13 +13477,13 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<double> >
-                         (std::equal_to<double>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), leftBound, std::placeholders::_1),
                          mask, hits);
             }
             else {
@@ -13485,13 +13494,13 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, hits);
             break;}
         }
@@ -13501,62 +13510,62 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             if (uncomp)
                 ierr = doComp0
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             else
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 if (uncomp)
                     ierr = doComp0
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
                 else
                     ierr = doComp
-                        (vals, std::bind2nd<std::equal_to<double> >
-                         (std::equal_to<double>(), rightBound),
+                        (vals, std::bind
+                         (std::equal_to<double>(), std::placeholders::_1, rightBound),
                          mask, hits);
             }
             else {
@@ -13751,10 +13760,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13765,10 +13774,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13779,36 +13788,36 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13818,8 +13827,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less<T> >
-                 (std::less<T>(), leftBound),
+                (vals, std::bind
+                 (std::less<T>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -13829,10 +13838,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13843,10 +13852,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13857,36 +13866,36 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13896,8 +13905,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less_equal<T> >
-                 (std::less_equal<T>(), leftBound),
+                (vals, std::bind
+                 (std::less_equal<T>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -13907,38 +13916,38 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13949,10 +13958,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13963,8 +13972,8 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && rightBound < leftBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -13974,8 +13983,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater<T> >
-                 (std::greater<T>(), leftBound),
+                (vals, std::bind
+                 (std::greater<T>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -13985,38 +13994,38 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14027,10 +14036,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14041,10 +14050,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14054,8 +14063,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater_equal<T> >
-                 (std::greater_equal<T>(), leftBound),
+                (vals, std::bind
+                 (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -14066,8 +14075,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_LT: {
                 if (leftBound < rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res);
                 }
                 else {
@@ -14078,8 +14087,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_LE: {
                 if (leftBound <= rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res);
                 }
                 else {
@@ -14090,8 +14099,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_GT: {
                 if (leftBound > rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res);
                 }
                 else {
@@ -14102,8 +14111,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_GE: {
                 if (leftBound >= rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res);
                 }
                 else {
@@ -14114,8 +14123,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_EQ: {
                 if (leftBound == rightBound && rightBound == rng.rightBound()) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res);
                 }
                 else {
@@ -14125,8 +14134,8 @@ long ibis::part::doScan(const array_t<T> &vals,
                 break;}
             default: {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<T> >
-                     (std::equal_to<T>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), leftBound, std::placeholders::_1),
                      mask, res);
                 break;}
             }
@@ -14140,33 +14149,33 @@ long ibis::part::doScan(const array_t<T> &vals,
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doComp
-                (vals, std::bind2nd<std::less<T> >
-                 (std::less<T>(), rightBound),
+                (vals, std::bind
+                 (std::less<T>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
-                (vals, std::bind2nd<std::less_equal<T> >
-                 (std::less_equal<T>(), rightBound),
+                (vals, std::bind
+                 (std::less_equal<T>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater<T> >
-                 (std::greater<T>(), rightBound),
+                (vals, std::bind
+                 (std::greater<T>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater_equal<T> >
-                 (std::greater_equal<T>(), rightBound),
+                (vals, std::bind
+                 (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14357,10 +14366,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14371,10 +14380,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14385,36 +14394,36 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<T> >
-                     (std::less<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14424,8 +14433,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less<T> >
-                 (std::less<T>(), leftBound),
+                (vals, std::bind
+                 (std::less<T>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -14435,10 +14444,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
-                     std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14449,10 +14458,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
-                     std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14463,36 +14472,36 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<T> >
-                     (std::less_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14502,8 +14511,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less_equal<T> >
-                 (std::less_equal<T>(), leftBound),
+                (vals, std::bind
+                 (std::less_equal<T>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -14513,38 +14522,38 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14555,10 +14564,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<T> >
-                     (std::greater<T>(), leftBound),
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14569,8 +14578,8 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && rightBound < leftBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14580,8 +14589,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater<T> >
-                 (std::greater<T>(), leftBound),
+                (vals, std::bind
+                 (std::greater<T>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -14591,38 +14600,38 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<T> >
-                     (std::less<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<T> >
-                     (std::less_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::greater<T> >
-                     (std::greater<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14633,10 +14642,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::greater_equal<T> >
-                     (std::greater_equal<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14647,10 +14656,10 @@ long ibis::part::doScan(const array_t<T> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<T> >
-                     (std::greater_equal<T>(), leftBound),
-                     std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14660,8 +14669,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater_equal<T> >
-                 (std::greater_equal<T>(), leftBound),
+                (vals, std::bind
+                 (std::greater_equal<T>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -14672,8 +14681,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_LT: {
                 if (leftBound < rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res, hits);
                 }
                 else {
@@ -14684,8 +14693,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_LE: {
                 if (leftBound <= rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res, hits);
                 }
                 else {
@@ -14696,8 +14705,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_GT: {
                 if (leftBound > rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res, hits);
                 }
                 else {
@@ -14708,8 +14717,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_GE: {
                 if (leftBound >= rightBound) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res, hits);
                 }
                 else {
@@ -14720,8 +14729,8 @@ long ibis::part::doScan(const array_t<T> &vals,
             case ibis::qExpr::OP_EQ: {
                 if (leftBound == rightBound && rightBound == rng.rightBound()) {
                     ierr = doComp
-                        (vals, std::bind1st< std::equal_to<T> >
-                         (std::equal_to<T>(), leftBound),
+                        (vals, std::bind
+                         (std::equal_to<T>(), leftBound, std::placeholders::_1),
                          mask, res, hits);
                 }
                 else {
@@ -14731,8 +14740,8 @@ long ibis::part::doScan(const array_t<T> &vals,
                 break;}
             default: {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<T> >
-                     (std::equal_to<T>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
                 break;}
             }
@@ -14746,33 +14755,33 @@ long ibis::part::doScan(const array_t<T> &vals,
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doComp
-                (vals, std::bind2nd<std::less<T> >
-                 (std::less<T>(), rightBound),
+                (vals, std::bind
+                 (std::less<T>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
-                (vals, std::bind2nd<std::less_equal<T> >
-                 (std::less_equal<T>(), rightBound),
+                (vals, std::bind
+                 (std::less_equal<T>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater<T> >
-                 (std::greater<T>(), rightBound),
+                (vals, std::bind
+                 (std::greater<T>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater_equal<T> >
-                 (std::greater_equal<T>(), rightBound),
+                (vals, std::bind
+                 (std::greater_equal<T>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<T> >
-                     (std::equal_to<T>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<T>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -14842,10 +14851,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14856,10 +14865,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14870,36 +14879,36 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14909,8 +14918,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less<double> >
-                 (std::less<double>(), leftBound),
+                (vals, std::bind
+                 (std::less<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -14920,10 +14929,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14934,10 +14943,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14948,36 +14957,36 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -14987,8 +14996,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less_equal<double> >
-                 (std::less_equal<double>(), leftBound),
+                (vals, std::bind
+                 (std::less_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -14998,38 +15007,38 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15040,10 +15049,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15054,8 +15063,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound < leftBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15065,8 +15074,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater<double> >
-                 (std::greater<double>(), leftBound),
+                (vals, std::bind
+                 (std::greater<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15076,38 +15085,38 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15118,10 +15127,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15132,10 +15141,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15145,8 +15154,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::greater_equal<double> >
-                 (std::greater_equal<double>(), leftBound),
+                (vals, std::bind
+                 (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15156,8 +15165,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15168,8 +15177,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15180,8 +15189,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15192,8 +15201,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15204,8 +15213,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_EQ: {
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doComp
-                    (vals, std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15215,8 +15224,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st< std::equal_to<double> >
-                 (std::equal_to<double>(), leftBound),
+                (vals, std::bind
+                 (std::equal_to<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15225,33 +15234,33 @@ long ibis::part::doScan(const array_t<float> &vals,
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doComp
-                (vals, std::bind2nd<std::less<double> >
-                 (std::less<double>(), rightBound),
+                (vals, std::bind
+                 (std::less<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
-                (vals, std::bind2nd<std::less_equal<double> >
-                 (std::less_equal<double>(), rightBound),
+                (vals, std::bind
+                 (std::less_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater<double> >
-                 (std::greater<double>(), rightBound),
+                (vals, std::bind
+                 (std::greater<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
-                (vals, std::bind2nd<std::greater_equal<double> >
-                 (std::greater_equal<double>(), rightBound),
+                (vals, std::bind
+                 (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15323,10 +15332,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15337,10 +15346,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15351,36 +15360,36 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15390,8 +15399,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less<double> >
-                 (std::less<double>(), leftBound),
+                (vals, std::bind
+                 (std::less<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15401,10 +15410,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15415,10 +15424,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15429,36 +15438,36 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15468,8 +15477,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             break;}
         default: {
             ierr = doComp
-                (vals, std::bind1st<std::less_equal<double> >
-                 (std::less_equal<double>(), leftBound),
+                (vals, std::bind
+                 (std::less_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15479,14 +15488,14 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
-                    (vals, std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                    (vals, std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
@@ -15494,15 +15503,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
@@ -15510,10 +15519,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15525,10 +15534,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15540,8 +15549,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (rightBound < leftBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15552,8 +15561,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater<double> >
-                 (std::greater<double>(), leftBound),
+                 std::bind
+                 (std::greater<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15564,40 +15573,40 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                     std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15608,10 +15617,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15622,10 +15631,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15636,8 +15645,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater_equal<double> >
-                 (std::greater_equal<double>(), leftBound),
+                 std::bind
+                 (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15648,8 +15657,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15661,8 +15670,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15674,8 +15683,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15687,8 +15696,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15700,8 +15709,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res);
             }
             else {
@@ -15712,8 +15721,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::equal_to<double> >
-                 (std::equal_to<double>(), leftBound),
+                 std::bind
+                 (std::equal_to<double>(), leftBound, std::placeholders::_1),
                  mask, res);
             break;}
         }
@@ -15723,37 +15732,37 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less<double> >
-                 (std::less<double>(), rightBound),
+                 std::bind
+                 (std::less<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less_equal<double> >
-                 (std::less_equal<double>(), rightBound),
+                 std::bind
+                 (std::less_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater<double> >
-                 (std::greater<double>(), rightBound),
+                 std::bind
+                 (std::greater<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater_equal<double> >
-                 (std::greater_equal<double>(), rightBound),
+                 std::bind
+                 (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res);
             }
             else {
@@ -15815,10 +15824,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15830,10 +15839,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15845,15 +15854,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -15861,15 +15870,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -15877,8 +15886,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15889,8 +15898,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st<std::less<double> >
-                 (std::less<double>(), leftBound),
+                 std::bind
+                 (std::less<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -15901,10 +15910,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15916,10 +15925,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15931,15 +15940,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -15947,15 +15956,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -15963,8 +15972,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -15975,8 +15984,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st<std::less_equal<double> >
-                 (std::less_equal<double>(), leftBound),
+                 std::bind
+                 (std::less_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -15987,15 +15996,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16003,15 +16012,15 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16019,10 +16028,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16034,10 +16043,10 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16049,8 +16058,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (rightBound < leftBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16061,8 +16070,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater<double> >
-                 (std::greater<double>(), leftBound),
+                 std::bind
+                 (std::greater<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16072,40 +16081,40 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16116,10 +16125,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16130,10 +16139,10 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16144,8 +16153,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater_equal<double> >
-                 (std::greater_equal<double>(), leftBound),
+                 std::bind
+                 (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16156,8 +16165,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16169,8 +16178,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16182,8 +16191,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16195,8 +16204,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16208,8 +16217,8 @@ long ibis::part::doScan(const array_t<float> &vals,
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16220,8 +16229,8 @@ long ibis::part::doScan(const array_t<float> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::equal_to<double> >
-                 (std::equal_to<double>(), leftBound),
+                 std::bind
+                 (std::equal_to<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16231,37 +16240,37 @@ long ibis::part::doScan(const array_t<float> &vals,
         case ibis::qExpr::OP_LT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less<double> >
-                 (std::less<double>(), rightBound),
+                 std::bind
+                 (std::less<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less_equal<double> >
-                 (std::less_equal<double>(), rightBound),
+                 std::bind
+                 (std::less_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater<double> >
-                 (std::greater<double>(), rightBound),
+                 std::bind
+                 (std::greater<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater_equal<double> >
-                 (std::greater_equal<double>(), rightBound),
+                 std::bind
+                 (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16296,8 +16305,7 @@ long ibis::part::doScan(const array_t<float> &vals,
 } // ibis::part::doScan
 
 /// Examine the range condition with in memory values.
-/// A specialization of the template for float arrays.  All comparisons are
-/// performed as doubles.
+/// A specialization of the template for double values.
 template <>
 long ibis::part::doScan(const array_t<double> &vals,
                         const ibis::qContinuousRange &rng,
@@ -16324,10 +16332,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16339,10 +16347,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16354,15 +16362,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16370,15 +16378,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less<double> >
-                     (std::less<double>(), leftBound),
+                     std::bind
+                     (std::less<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16386,8 +16394,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16398,8 +16406,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st<std::less<double> >
-                 (std::less<double>(), leftBound),
+                 std::bind
+                 (std::less<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16410,10 +16418,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16425,10 +16433,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16440,15 +16448,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16456,15 +16464,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st<std::less_equal<double> >
-                     (std::less_equal<double>(), leftBound),
+                     std::bind
+                     (std::less_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16472,8 +16480,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16484,8 +16492,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st<std::less_equal<double> >
-                 (std::less_equal<double>(), leftBound),
+                 std::bind
+                 (std::less_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16496,15 +16504,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16512,15 +16520,15 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
@@ -16528,10 +16536,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16543,10 +16551,10 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::greater<double> >
-                     (std::greater<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                     std::bind
+                     (std::greater<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16558,8 +16566,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (rightBound < leftBound) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16570,8 +16578,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater<double> >
-                 (std::greater<double>(), leftBound),
+                 std::bind
+                 (std::greater<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16581,40 +16589,40 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less<double> >
-                     (std::less<double>(), rightBound),
+                     std::bind
+                     (std::less<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::less_equal<double> >
-                     (std::less_equal<double>(), rightBound),
+                     std::bind
+                     (std::less_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater<double> >
-                     (std::greater<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16625,10 +16633,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::greater_equal<double> >
-                     (std::greater_equal<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16639,10 +16647,10 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_EQ: {
             if (rightBound <= leftBound) {
                 ierr = doComp
-                    (vals, std::bind1st< std::greater_equal<double> >
-                     (std::greater_equal<double>(), leftBound),
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                    (vals, std::bind
+                     (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -16653,8 +16661,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::greater_equal<double> >
-                 (std::greater_equal<double>(), leftBound),
+                 std::bind
+                 (std::greater_equal<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16665,8 +16673,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound < rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16678,8 +16686,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound <= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16691,8 +16699,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound > rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16704,8 +16712,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound >= rightBound) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16717,8 +16725,8 @@ long ibis::part::doScan(const array_t<double> &vals,
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind1st< std::equal_to<double> >
-                     (std::equal_to<double>(), leftBound),
+                     std::bind
+                     (std::equal_to<double>(), leftBound, std::placeholders::_1),
                      mask, res, hits);
             }
             else {
@@ -16729,8 +16737,8 @@ long ibis::part::doScan(const array_t<double> &vals,
         default: {
             ierr = doComp
                 (vals,
-                 std::bind1st< std::equal_to<double> >
-                 (std::equal_to<double>(), leftBound),
+                 std::bind
+                 (std::equal_to<double>(), leftBound, std::placeholders::_1),
                  mask, res, hits);
             break;}
         }
@@ -16740,37 +16748,37 @@ long ibis::part::doScan(const array_t<double> &vals,
         case ibis::qExpr::OP_LT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less<double> >
-                 (std::less<double>(), rightBound),
+                 std::bind
+                 (std::less<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::less_equal<double> >
-                 (std::less_equal<double>(), rightBound),
+                 std::bind
+                 (std::less_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater<double> >
-                 (std::greater<double>(), rightBound),
+                 std::bind
+                 (std::greater<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doComp
                 (vals,
-                 std::bind2nd<std::greater_equal<double> >
-                 (std::greater_equal<double>(), rightBound),
+                 std::bind
+                 (std::greater_equal<double>(), std::placeholders::_1, rightBound),
                  mask, res, hits);
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doComp
                     (vals,
-                     std::bind2nd<std::equal_to<double> >
-                     (std::equal_to<double>(), rightBound),
+                     std::bind
+                     (std::equal_to<double>(), std::placeholders::_1, rightBound),
                      mask, res, hits);
             }
             else {
@@ -17636,48 +17644,48 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<T> >
-                               (std::less<T>(), leftBound),
-                               std::bind2nd<std::less<T> >
-                               (std::less<T>(), rightBound));
+                               std::bind
+                               (std::less<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<T> >
-                               (std::less<T>(), leftBound),
-                               std::bind2nd<std::less_equal<T> >
-                               (std::less_equal<T>(), rightBound));
+                               std::bind
+                               (std::less<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<T> >
-                               (std::less<T>(), leftBound));
+                               std::bind
+                               (std::less<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<T> >
-                               (std::greater<T>(), rightBound));
+                               std::bind
+                               (std::greater<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<T> >
-                               (std::less<T>(), leftBound));
+                               std::bind
+                               (std::less<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<T> >
-                               (std::greater_equal<T>(), rightBound));
+                               std::bind
+                               (std::greater_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound < rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<T> >
-                               (std::equal_to<T>(), rightBound));
+                               std::bind
+                               (std::equal_to<T>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -17685,8 +17693,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less<T> >
-                           (std::less<T>(), leftBound));
+                           std::bind
+                           (std::less<T>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -17695,48 +17703,48 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<T> >
-                               (std::less_equal<T>(), leftBound),
-                               std::bind2nd<std::less<T> >
-                               (std::less<T>(), rightBound));
+                               std::bind
+                               (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<T> >
-                               (std::less_equal<T>(), leftBound),
-                               std::bind2nd<std::less_equal<T> >
-                               (std::less_equal<T>(), rightBound));
+                               std::bind
+                               (std::less_equal<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<T> >
-                               (std::less_equal<T>(), leftBound));
+                               std::bind
+                               (std::less_equal<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<T> >
-                               (std::greater<T>(), rightBound));
+                               std::bind
+                               (std::greater<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<T> >
-                               (std::less_equal<T>(), leftBound));
+                               std::bind
+                               (std::less_equal<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<T> >
-                               (std::greater_equal<T>(), rightBound));
+                               std::bind
+                               (std::greater_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound <= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<T> >
-                               (std::equal_to<T>(), rightBound));
+                               std::bind
+                               (std::equal_to<T>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -17744,8 +17752,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less_equal<T> >
-                           (std::less_equal<T>(), leftBound));
+                           std::bind
+                           (std::less_equal<T>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -17754,48 +17762,48 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<T> >
-                               (std::greater<T>(), leftBound));
+                               std::bind
+                               (std::greater<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<T> >
-                               (std::less<T>(), rightBound));
+                               std::bind
+                               (std::less<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<T> >
-                               (std::greater<T>(), leftBound));
+                               std::bind
+                               (std::greater<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<T> >
-                               (std::less_equal<T>(), rightBound));
+                               std::bind
+                               (std::less_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<T> >
-                               (std::greater<T>(), leftBound),
-                               std::bind2nd<std::greater<T> >
-                               (std::greater<T>(), rightBound));
+                               std::bind
+                               (std::greater<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<T> >
-                               (std::greater<T>(), leftBound),
-                               std::bind2nd<std::greater_equal<T> >
-                               (std::greater_equal<T>(), rightBound));
+                               std::bind
+                               (std::greater<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && rightBound < leftBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<T> >
-                               (std::equal_to<T>(), rightBound));
+                               std::bind
+                               (std::equal_to<T>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -17803,8 +17811,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater<T> >
-                           (std::greater<T>(), leftBound));
+                           std::bind
+                           (std::greater<T>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -17813,50 +17821,50 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<T> >
-                               (std::greater_equal<T>(), leftBound));
+                               std::bind
+                               (std::greater_equal<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<T> >
-                               (std::less<T>(), rightBound));
+                               std::bind
+                               (std::less<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<T> >
-                               (std::greater_equal<T>(), leftBound));
+                               std::bind
+                               (std::greater_equal<T>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<T> >
-                               (std::less_equal<T>(), rightBound));
+                               std::bind
+                               (std::less_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<T> >
-                               (std::greater_equal<T>(), leftBound),
-                               std::bind2nd<std::greater<T> >
-                               (std::greater<T>(), rightBound));
+                               std::bind
+                               (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<T> >
-                               (std::greater_equal<T>(), leftBound),
-                               std::bind2nd<std::greater_equal<T> >
-                               (std::greater_equal<T>(), rightBound));
+                               std::bind
+                               (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<T>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound() && leftBound > rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<T> >
-                               (std::greater_equal<T>(), leftBound),
-                               std::bind2nd<std::equal_to<T> >
-                               (std::equal_to<T>(), rightBound));
+                               std::bind
+                               (std::greater_equal<T>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::equal_to<T>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -17864,8 +17872,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater_equal<T> >
-                           (std::greater_equal<T>(), leftBound));
+                           std::bind
+                           (std::greater_equal<T>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -17875,8 +17883,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             case ibis::qExpr::OP_LT: {
                 if (leftBound < rightBound) {
                     ierr = doCount(vals, mask,
-                                   std::bind1st< std::equal_to<T> >
-                                   (std::equal_to<T>(), leftBound));
+                                   std::bind
+                                   (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 }
                 else {
                     ierr = 0;
@@ -17885,8 +17893,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             case ibis::qExpr::OP_LE: {
                 if (leftBound <= rightBound) {
                     ierr = doCount(vals, mask,
-                                   std::bind1st< std::equal_to<T> >
-                                   (std::equal_to<T>(), leftBound));
+                                   std::bind
+                                   (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 }
                 else {
                     ierr = 0;
@@ -17895,8 +17903,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             case ibis::qExpr::OP_GT: {
                 if (leftBound > rightBound) {
                     ierr = doCount(vals, mask,
-                                   std::bind1st< std::equal_to<T> >
-                                   (std::equal_to<T>(), leftBound));
+                                   std::bind
+                                   (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 }
                 else {
                     ierr = 0;
@@ -17905,8 +17913,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             case ibis::qExpr::OP_GE: {
                 if (leftBound >= rightBound) {
                     ierr = doCount(vals, mask,
-                                   std::bind1st< std::equal_to<T> >
-                                   (std::equal_to<T>(), leftBound));
+                                   std::bind
+                                   (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 }
                 else {
                     ierr = 0;
@@ -17915,8 +17923,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
             case ibis::qExpr::OP_EQ: {
                 if (leftBound == rightBound && rightBound == rng.rightBound()) {
                     ierr = doCount(vals, mask,
-                                   std::bind1st< std::equal_to<T> >
-                                   (std::equal_to<T>(), leftBound));
+                                   std::bind
+                                   (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 }
                 else {
                     ierr = 0;
@@ -17924,8 +17932,8 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
                 break;}
             default: {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<T> >
-                               (std::equal_to<T>(), leftBound));
+                               std::bind
+                               (std::equal_to<T>(), leftBound, std::placeholders::_1));
                 break;}
             }
         }
@@ -17937,29 +17945,29 @@ long ibis::part::doCount(const ibis::qRange &cmp) const {
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less<T> >
-                           (std::less<T>(), rightBound));
+                           std::bind
+                           (std::less<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less_equal<T> >
-                           (std::less_equal<T>(), rightBound));
+                           std::bind
+                           (std::less_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater<T> >
-                           (std::greater<T>(), rightBound));
+                           std::bind
+                           (std::greater<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater_equal<T> >
-                           (std::greater_equal<T>(), rightBound));
+                           std::bind
+                           (std::greater_equal<T>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<T> >
-                               (std::equal_to<T>(), rightBound));
+                               std::bind
+                               (std::equal_to<T>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18013,48 +18021,48 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound),
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound),
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound < rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18062,8 +18070,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less<double> >
-                           (std::less<double>(), leftBound));
+                           std::bind
+                           (std::less<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18072,48 +18080,48 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound),
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound),
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound <= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18121,8 +18129,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less_equal<double> >
-                           (std::less_equal<double>(), leftBound));
+                           std::bind
+                           (std::less_equal<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18131,48 +18139,48 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound),
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound),
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound < leftBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18180,8 +18188,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater<double> >
-                           (std::greater<double>(), leftBound));
+                           std::bind
+                           (std::greater<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18190,50 +18198,50 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound > rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18241,8 +18249,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater_equal<double> >
-                           (std::greater_equal<double>(), leftBound));
+                           std::bind
+                           (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18251,8 +18259,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18261,8 +18269,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18271,8 +18279,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18281,8 +18289,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18291,8 +18299,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_EQ: {
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18300,8 +18308,8 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::equal_to<double> >
-                           (std::equal_to<double>(), leftBound));
+                           std::bind
+                           (std::equal_to<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18309,29 +18317,29 @@ long ibis::part::doCount<float>(const ibis::qRange &cmp) const {
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less<double> >
-                           (std::less<double>(), rightBound));
+                           std::bind
+                           (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less_equal<double> >
-                           (std::less_equal<double>(), rightBound));
+                           std::bind
+                           (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater<double> >
-                           (std::greater<double>(), rightBound));
+                           std::bind
+                           (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater_equal<double> >
-                           (std::greater_equal<double>(), rightBound));
+                           std::bind
+                           (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18384,48 +18392,48 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound),
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound),
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less<double> >
-                               (std::less<double>(), leftBound));
+                               std::bind
+                               (std::less<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound < rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18433,8 +18441,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less<double> >
-                           (std::less<double>(), leftBound));
+                           std::bind
+                           (std::less<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18443,48 +18451,48 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound),
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound),
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st<std::less_equal<double> >
-                               (std::less_equal<double>(), leftBound));
+                               std::bind
+                               (std::less_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound <= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18492,8 +18500,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st<std::less_equal<double> >
-                           (std::less_equal<double>(), leftBound));
+                           std::bind
+                           (std::less_equal<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18502,48 +18510,48 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound),
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater<double> >
-                               (std::greater<double>(), leftBound),
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound < leftBound) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18551,8 +18559,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater<double> >
-                           (std::greater<double>(), leftBound));
+                           std::bind
+                           (std::greater<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18561,50 +18569,50 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less<double> >
-                               (std::less<double>(), rightBound));
+                               std::bind
+                               (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             else
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::less_equal<double> >
-                               (std::less_equal<double>(), rightBound));
+                               std::bind
+                               (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::greater<double> >
-                               (std::greater<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound)
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::greater_equal<double> >
-                               (std::greater_equal<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             else
                 ierr = 0;
             break;}
         case ibis::qExpr::OP_EQ: {
             if (leftBound > rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::greater_equal<double> >
-                               (std::greater_equal<double>(), leftBound),
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::greater_equal<double>(), leftBound, std::placeholders::_1),
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;
@@ -18612,8 +18620,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::greater_equal<double> >
-                           (std::greater_equal<double>(), leftBound));
+                           std::bind
+                           (std::greater_equal<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18622,8 +18630,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LT: {
             if (leftBound < rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18632,8 +18640,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_LE: {
             if (leftBound <= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18642,8 +18650,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_GT: {
             if (leftBound > rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18652,8 +18660,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_GE: {
             if (leftBound >= rightBound) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18662,8 +18670,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         case ibis::qExpr::OP_EQ: {
             if (leftBound == rightBound && rightBound == rng.rightBound()) {
                 ierr = doCount(vals, mask,
-                               std::bind1st< std::equal_to<double> >
-                               (std::equal_to<double>(), leftBound));
+                               std::bind
+                               (std::equal_to<double>(), leftBound, std::placeholders::_1));
             }
             else {
                 ierr = 0;
@@ -18671,8 +18679,8 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
             break;}
         default: {
             ierr = doCount(vals, mask,
-                           std::bind1st< std::equal_to<double> >
-                           (std::equal_to<double>(), leftBound));
+                           std::bind
+                           (std::equal_to<double>(), leftBound, std::placeholders::_1));
             break;}
         }
         break;}
@@ -18680,29 +18688,29 @@ long ibis::part::doCount<double>(const ibis::qRange &cmp) const {
         switch (rop) {
         case ibis::qExpr::OP_LT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less<double> >
-                           (std::less<double>(), rightBound));
+                           std::bind
+                           (std::less<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_LE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::less_equal<double> >
-                           (std::less_equal<double>(), rightBound));
+                           std::bind
+                           (std::less_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GT: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater<double> >
-                           (std::greater<double>(), rightBound));
+                           std::bind
+                           (std::greater<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_GE: {
             ierr = doCount(vals, mask,
-                           std::bind2nd<std::greater_equal<double> >
-                           (std::greater_equal<double>(), rightBound));
+                           std::bind
+                           (std::greater_equal<double>(), std::placeholders::_1, rightBound));
             break;}
         case ibis::qExpr::OP_EQ: {
             if (rightBound == rng.rightBound()) {
                 ierr = doCount(vals, mask,
-                               std::bind2nd<std::equal_to<double> >
-                               (std::equal_to<double>(), rightBound));
+                               std::bind
+                               (std::equal_to<double>(), std::placeholders::_1, rightBound));
             }
             else {
                 ierr = 0;

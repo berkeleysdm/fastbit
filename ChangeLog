@@ -1,3 +1,61 @@
+2022-07-14 John Wu <john dot wu at ACM dot org>
+	* src/selectClause.cpp: selectClause::find uses unmatched index to
+	arrays
+
+2022-07-13 John Wu <john dot wu at ACM dot org>
+	* src/column.cpp: the use of existing lower and upper in
+	qContinuousRange::overlap is not reliable because variables lower
+	and upper are from metadata files that are meant to capture
+	nominal minimum and maximum values, change to use the min/max
+	values from the index of the column
+
+2022-06-14 John Wu <john dot wu at ACM dot org>
+	* examples/ibis.cpp: change the logic on using testing to allow
+	more random queries to be generated
+
+2021-07-15 John Wu <john dot wu at ACM dot org>
+	* src/util.cpp, src/util.h: remove member function c_str from
+	ibis::util::logger
+
+2019-09-16 John Wu <john dot wu at ACM dot org>
+	* src/iapi.cpp: in fastbit_iapi_reregister_array, change case
+	statements to use ibis::TYPE_T instead of FastBitDataType
+
+2019-05-06 John Wu <john dot wu at ACM dot org>
+	* src/part.cpp: change all bind1st and bind2nd to bind
+
+2018-03-13 Francois Xavier <fxcoudert at gmail.com>
+	* src/array_t.h, src/array_t.cpp: change 'm_begin > 0' to 'm_begin != 0'
+	This is to address the change in C++ standard change that disallow
+	automatic conversion of 0 to nullptr
+
+2017-05-06 John Wu <john dot wu at ACM dot org>
+	* src/bord.cpp:3713 change the logic in ibis::bord::reoder to do
+	nothing when the user specified keys do not machine any known
+	columns or have only a single known value.  When the user did not
+	specify any keys, the default to different.
+
+2017-05-02 John Wu <john dot wu at ACM dot org>
+	* src/ibin.cpp: minor adjustment of print statements
+
+2017-02-02 John Wu <john dot wu at ACM dot org>
+	* tests/Makefile.am: add *-data target to make it easier for users
+	to generate the test data
+	* tests/*.cpp: change auto_ptr to unique_ptr
+
+2017-01-05 John Wu <john dot wu at ACM dot org>
+	* src/part.h:532 swap the first two arguments to conform to the
+	convention used in the actual implementation in parth.cpp (a
+	problem reported by Allen Sanderson)
+
+2016-12-15 John Wu <john dot wu at ACM dot org>
+	* configure.ac: apply patch from Allen Sanderson
+
+2016-10-02 John Wu <John dot Wu at ACM dot org>
+	* src/selectClause.h: add enum value FIRST and LAST to
+	ibis::selectClause::AGGREGADO to address the question raised by
+	Mirko Hellmann <mirko.hellmann at bewotec.de>
+
 2016-04-27 John Wu <John dot Wu at ACM dot org>
 	* src/bord.cpp:459 ref[0] should be ref[i], a bug reported by Petr
 	Velan
@@ -12,7 +70,7 @@
 	logical in taking the incoming argument for sorting directions
 	(ascin)
 	* tests/vault/marksdb-3: correct the output expected, previous
-	results was sorted in the in correct oder (thanks to the bug
+	results was sorted in an incorrect order (thanks to the bug
 	report from Will Glozer <will at kentik dot com> for bringing
 	attention to this problem)
 

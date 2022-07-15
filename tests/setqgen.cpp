@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <cmath>        /* fmod, ceil */
 #include <iomanip>      /* setprecision, setfill */
-#include <memory>       /* std::auto_ptr */
+#include <memory>       /* std::unique_ptr */
 
 /* number of numeric columns to generate data for SETQ is always 13, with
    one as a sequence number */
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
         ibis::gVerbose = 1;
 
     ibis::table::row val;
-    std::auto_ptr<ibis::tablex> tab(ibis::tablex::create());
+    std::unique_ptr<ibis::tablex> tab(ibis::tablex::create());
     initColumns(*tab, val);
     ierr = tab->reserveBuffer(nrpd);
     const uint32_t cap = (ierr > 0 ? tab->bufferCapacity() : 1000000);

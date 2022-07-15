@@ -14,14 +14,14 @@
 }
 
 /* bison declarations */
-%require "2.7"
+%require "3.0"
 %debug
-%error-verbose
+%define parse.error verbose
  /*%start START*/
 %defines
 %skeleton "lalr1.cc"
 %define api.namespace {ibis}
-%define parser_class_name {selectParser}
+%define api.parser.class {selectParser}
 %locations
      /*%expect 1*/
 %initial-action

@@ -65,9 +65,9 @@ public:
     const T& front() const {return *m_begin;};
     const T& back() const {return m_end[-1];};
 
-    bool empty() const {return (m_begin == 0 || m_begin >= m_end);};
+    bool empty() const {return (m_begin == nullptr || m_begin >= m_end);};
     size_t size() const {	///!< Return the number of elements.
-	return (m_begin > 0 && m_end > m_begin ? m_end - m_begin : 0);
+	return (m_begin != nullptr && m_end > m_begin ? m_end - m_begin : 0U);
     };
     inline void clear();
 
@@ -106,7 +106,7 @@ public:
     T& operator[](size_t i) {return m_begin[i];};
     void nosharing();
     /// Is the content of the array solely in memory?
-    bool incore() const {return(actual == 0 || actual->filename() == 0);}
+    bool incore() const {return(actual == nullptr || actual->filename() == 0);}
 
     iterator insert(iterator pos, const T& val);
     void insert(iterator p, size_t n, const T& val);
@@ -202,7 +202,7 @@ inline void ibis::array_t<T>::swap(array_t<T>& rhs) {
 /// - the existing storage object has no free space for the new data value.
 template<class T> 
 inline void ibis::array_t<T>::push_back(const T& elm) {
-    if (actual != 0 && actual->filename() == 0 &&
+    if (actual != nullptr && actual->filename() == nullptr &&
 	(char*)(m_end+1) <= actual->end()) {
 	// simply add the value
 	*m_end = elm;
@@ -213,14 +213,14 @@ inline void ibis::array_t<T>::push_back(const T& elm) {
 	if (nold > 0x7FFFFFFE) {
 	    throw "array_t must have less than 2^31 elements";
 	}
-	if (actual == 0 || actual->filename() != 0 ||
+	if (actual == nullptr || actual->filename() != nullptr ||
 	    (const T*)actual->end() <= m_end) {
 	    size_t nnew = (nold >= 7 ? nold : 7) + nold;
 	    if (nnew > 0x7FFFFFFFU)
 		nnew = 0x7FFFFFFFU;
 	    reserve(nnew);
 	}
-	if (actual != 0 && actual->filename() == 0 &&
+	if (actual != nullptr && actual->filename() == nullptr &&
 	    (char*)(m_end+1) <= actual->end()) {
 	    // simply add the value
 	    *m_end = elm;
@@ -235,7 +235,7 @@ inline void ibis::array_t<T>::push_back(const T& elm) {
 /// The maximum number of elements can be stored with the current memory.
 template <class T>
 inline size_t ibis::array_t<T>::capacity() const {
-    return (actual!=0 ? (const T*)actual->end()-m_begin :
+    return (actual != nullptr ? (const T*)actual->end()-m_begin :
 	    m_end>=m_begin ? m_end-m_begin : 0);
 } // ibis::array_t<T>::capacity
 #endif // IBIS_ARRAY_T_H

@@ -1,6 +1,6 @@
 //File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 //
 // This file contains implementation of the functions defined in column.h
 //
@@ -6061,10 +6061,6 @@ long ibis::column::evaluateRange(const ibis::qContinuousRange& cmp,
         ierr = -4;
         return ierr;
     }
-    if (! cmp.overlap(lower, upper)) {
-        low.set(0, mask.size());
-        return 0;
-    }
 
     ibis::util::timer mytimer(evt.c_str(), 4);
     try {
@@ -6072,6 +6068,17 @@ long ibis::column::evaluateRange(const ibis::qContinuousRange& cmp,
         { // use a block to limit the scope of index lock
             indexLock lock(this, evt.c_str());
             if (idx != 0) {
+                if (idx->getNRows() == thePart->nRows()) {
+                    // assume the min/max from the index is reliable, the
+                    // nominal min/max in ibis::column is not reliable
+                    const double amin = idx->getMin();
+                    const double amax = idx->getMax();
+                    if (! cmp.overlap(amin, amax)) {
+                        low.set(0, idx->getNRows());
+                        return 0;
+                    }
+                }
+
                 if (dataflag == 0) {
                     std::string dfname;
                     const char *str = dataFileName(dfname);
@@ -6250,15 +6257,22 @@ long ibis::column::evaluateAndSelect(const ibis::qContinuousRange& cmp,
         ierr = -4;
         return ierr;
     }
-    if (! cmp.overlap(lower, upper)) {
-        low.set(0, mask.size());
-        return 0;
-    }
 
     try {
         if (mask.size() == mask.cnt()) { // directly use index
             indexLock lock(this, "evaluateAndSelect");
             if (idx != 0 && idx->getNRows() == thePart->nRows()) {
+                {
+                    // assume the min/max from the index is reliable, the
+                    // nominal min/max in ibis::column is not reliable
+                    const double amin = idx->getMin();
+                    const double amax = idx->getMax();
+                    if (! cmp.overlap(amin, amax)) {
+                        low.set(0, idx->getNRows());
+                        return 0;
+                    }
+                }
+
                 const double icost = idx->estimateCost(cmp);
                 const double scost = ibis::fileManager::pageSize() *
                     ibis::part::countPages(mask, elementSize());
@@ -6348,15 +6362,22 @@ long ibis::column::evaluateRange(const ibis::qDiscreteRange& cmp,
             return evaluateRange(cr, mask, low);
         }
     }
-    if (! cmp.overlap(lower, upper)) {
-        low.set(0, mask.size());
-        return 0;
-    }
 
     ibis::util::timer mytimer(evt.c_str(), 4);
     try {
         indexLock lock(this, evt.c_str());
         if (idx != 0) {
+            if (idx->getNRows() == thePart->nRows()) {
+                // assume the min/max from the index is reliable, the
+                // nominal min/max in ibis::column is not reliable
+                const double amin = idx->getMin();
+                const double amax = idx->getMax();
+                if (! cmp.overlap(amin, amax)) {
+                    low.set(0, idx->getNRows());
+                    return 0;
+                }
+            }
+
             const unsigned elem = elementSize();
             const double idxcost = idx->estimateCost(cmp) *
                 (1.0 + log((double)cmp.nItems()));
@@ -6503,11 +6524,11 @@ long ibis::column::estimateRange(const ibis::qContinuousRange& cmp,
         high.copy(mask_);
         return 0;
     }
-    if (! cmp.overlap(lower, upper)) {
-        high.set(0, thePart->nRows());
-        low.set(0, thePart->nRows());
-        return 0;
-    }
+    // if (! cmp.overlap(lower, upper)) {
+    //     high.set(0, thePart->nRows());
+    //     low.set(0, thePart->nRows());
+    //     return 0;
+    // }
 
     try {
         indexLock lock(this, "estimateRange");
@@ -6566,9 +6587,6 @@ long ibis::column::estimateRange(const ibis::qContinuousRange& cmp,
 /// hits.  If no index can be computed, it will return the number of rows
 /// as the upper bound.
 long ibis::column::estimateRange(const ibis::qContinuousRange& cmp) const {
-    if (! cmp.overlap(lower, upper))
-        return 0;
-
     long ret = (thePart != 0 ? thePart->nRows() : LONG_MAX);
     if (cmp.leftOperator() == ibis::qExpr::OP_UNDEFINED &&
         cmp.rightOperator() == ibis::qExpr::OP_UNDEFINED)
@@ -6613,8 +6631,6 @@ double ibis::column::estimateCost(const ibis::qContinuousRange& cmp) const {
     if (cmp.leftOperator() == ibis::qExpr::OP_UNDEFINED &&
         cmp.rightOperator() == ibis::qExpr::OP_UNDEFINED)
         return 0.0;
-    if (! cmp.overlap(lower, upper))
-        return 0.0;
 
     double ret;
     indexLock lock(this, "estimateCost");
@@ -6630,9 +6646,6 @@ double ibis::column::estimateCost(const ibis::qContinuousRange& cmp) const {
 } // ibis::column::estimateCost
 
 double ibis::column::estimateCost(const ibis::qDiscreteRange& cmp) const {
-    if (! cmp.overlap(lower, upper))
-        return 0.0;
-
     double ret;
     indexLock lock(this, "estimateCost");
     if (idx != 0) {
@@ -6695,9 +6708,6 @@ float ibis::column::getUndecidable(const ibis::qContinuousRange& cmp,
 
 // use the index to compute a upper bound on the number of hits
 long ibis::column::estimateRange(const ibis::qDiscreteRange& cmp) const {
-    if (! cmp.overlap(lower, upper))
-        return 0;
-
     long ret = (thePart != 0 ? thePart->nRows() : LONG_MAX);
     try {
         indexLock lock(this, "estimateRange");
@@ -8897,7 +8907,7 @@ template <typename T>
 T ibis::column::computeMax(const array_t<T>& vals,
                            const ibis::bitvector& mask) {
     T res = std::numeric_limits<T>::min();
-    if (res > 0) res = -std::numeric_limits<T>::max();
+    // if (res > 0) res = -std::numeric_limits<T>::max();
     if (vals.empty() || mask.cnt() == 0) return res;
 
     for (ibis::bitvector::indexSet ix = mask.firstIndexSet();
@@ -12253,54 +12263,6 @@ ibis::column::info::info(const ibis::column& col)
     }
 }
 
-// explicit template instantiation
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<unsigned char>&,
- array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<signed char>&,
- array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<char>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<uint16_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<int16_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<uint32_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<int32_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<uint64_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<int64_t>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<float>&, array_t<uint32_t>&) const;
-template long ibis::column::selectValuesT
-(const char*, const bitvector&, array_t<double>&, array_t<uint32_t>&) const;
-
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const char special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask,
- const unsigned char special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const int16_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const uint16_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const int32_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const uint32_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const int64_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const uint64_t special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const float special);
-template long ibis::column::castAndWrite
-(const array_t<double>& vals, ibis::bitvector& mask, const double special);
-
 /// Format the integer value @c ut assuming it is representing a unix time
 /// stamp.
 ///
@@ -12355,3 +12317,135 @@ void ibis::column::unixTimeScribe::operator()
     out << buf;
 } // ibis::column::unixTimeScribe::operator()
 
+
+// explicit template instantiation
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<unsigned char>&,
+ array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<signed char>&,
+ array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<char>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<uint16_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<int16_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<uint32_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<int32_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<uint64_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<int64_t>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<float>&, array_t<uint32_t>&) const;
+template long ibis::column::selectValuesT
+(const char*, const bitvector&, array_t<double>&, array_t<uint32_t>&) const;
+
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const char special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask,
+ const unsigned char special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const int16_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const uint16_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const int32_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const uint32_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const int64_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const uint64_t special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const float special);
+template long ibis::column::castAndWrite
+(const array_t<double>& vals, ibis::bitvector& mask, const double special);
+
+template void ibis::column::actualMinMax
+(const array_t<signed char>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<unsigned char>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<int16_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<uint16_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<int32_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<uint32_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<int64_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<uint64_t>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<float>&, const ibis::bitvector&, double&, double&, bool&);
+template void ibis::column::actualMinMax
+(const array_t<double>&, const ibis::bitvector&, double&, double&, bool&);
+
+template signed char ibis::column::computeMin
+(const array_t<signed char>&, const ibis::bitvector&);
+template unsigned char ibis::column::computeMin
+(const array_t<unsigned char>&, const ibis::bitvector&);
+template int16_t ibis::column::computeMin
+(const array_t<int16_t>&, const ibis::bitvector&);
+template uint16_t ibis::column::computeMin
+(const array_t<uint16_t>&, const ibis::bitvector&);
+template int32_t ibis::column::computeMin
+(const array_t<int32_t>&, const ibis::bitvector&);
+template uint32_t ibis::column::computeMin
+(const array_t<uint32_t>&, const ibis::bitvector&);
+template int64_t ibis::column::computeMin
+(const array_t<int64_t>&, const ibis::bitvector&);
+template uint64_t ibis::column::computeMin
+(const array_t<uint64_t>&, const ibis::bitvector&);
+template float ibis::column::computeMin
+(const array_t<float>&, const ibis::bitvector&);
+template double ibis::column::computeMin
+(const array_t<double>&, const ibis::bitvector&);
+
+template signed char ibis::column::computeMax
+(const array_t<signed char>&, const ibis::bitvector&);
+template unsigned char ibis::column::computeMax
+(const array_t<unsigned char>&, const ibis::bitvector&);
+template int16_t ibis::column::computeMax
+(const array_t<int16_t>&, const ibis::bitvector&);
+template uint16_t ibis::column::computeMax
+(const array_t<uint16_t>&, const ibis::bitvector&);
+template int32_t ibis::column::computeMax
+(const array_t<int32_t>&, const ibis::bitvector&);
+template uint32_t ibis::column::computeMax
+(const array_t<uint32_t>&, const ibis::bitvector&);
+template int64_t ibis::column::computeMax
+(const array_t<int64_t>&, const ibis::bitvector&);
+template uint64_t ibis::column::computeMax
+(const array_t<uint64_t>&, const ibis::bitvector&);
+template float ibis::column::computeMax
+(const array_t<float>&, const ibis::bitvector&);
+template double ibis::column::computeMax
+(const array_t<double>&, const ibis::bitvector&);
+
+template double ibis::column::computeSum
+(const array_t<signed char>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<unsigned char>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<int16_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<uint16_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<int32_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<uint32_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<int64_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<uint64_t>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<float>&, const ibis::bitvector&);
+template double ibis::column::computeSum
+(const array_t<double>&, const ibis::bitvector&);

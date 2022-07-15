@@ -1,6 +1,6 @@
 // $Id$
 // Author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2020 the Regents of the University of California
 /** @file thula.cpp
 
 This is a simple test program for the querying functions of ibis::table.
@@ -19,6 +19,11 @@ as partitions of one data table.
 order-by clause will be used.
 
 @note Multiple where clauses are executed one after another.
+
+@note The option -t is always interpreted as a request for performing
+self-test.  This option expect a numer to specify the number of random
+queries to be used for the self-test.  This option may appear multiple
+times on a command line.  The numerical values will be added together.
 
 Egretta Thula is the Latin name for Snowy Egret, one of John's favorite
 birds, see

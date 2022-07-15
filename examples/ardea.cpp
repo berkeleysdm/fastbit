@@ -895,7 +895,7 @@ int main(int argc, char** argv) {
                 if (build_indexes > 0) { // build indexes
                     std::unique_ptr<ibis::table>
                         tbl(ibis::table::create(outdir));
-                    if (tbl.get() != 0)
+                    if (tbl.get() != nullptr)
                         tbl->buildIndexes(0);
                 }
             }
@@ -943,7 +943,7 @@ int main(int argc, char** argv) {
                 if (build_indexes > 0) { // build indexes
                     std::unique_ptr<ibis::table>
                         tbl(ibis::table::create(outdir));
-                    if (tbl.get() != 0)
+                    if (tbl.get() != nullptr)
                         tbl->buildIndexes(0);
                 }
             }

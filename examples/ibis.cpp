@@ -1,7 +1,7 @@
 // $Id$
 // Author: John Wu <John.Wu at ACM.org>
 //         Lawrence Berkeley National Laboratory
-// Copyright (c) 2001-2016 the Regents of the University of California
+// Copyright (c) 2001-2020 the Regents of the University of California
 //
 /** @file ibis.cpp
 
@@ -64,7 +64,7 @@
     The LIMIT clause limits the maximum number of output rows.  Only number
     may follow the LIMIT keyword.  This clause has effects only if the
     preceeding WHERE clause selected less than or equal to the specified
-    number of rows (after applying the implicit group by clause).
+    number of rows (after applying the implicit group-by clause).
 
     Command line options:
     <pre>
@@ -112,8 +112,8 @@
     print the number of hits.  In either case, one gets back the number of
     hits, but different handling is required.
 
-    @note Only implicit group by operation is performed.  This program does
-    NOT accept a group by clause!
+    @note Only implicit group-by operation is performed.  This program does
+    NOT accept a group-by clause!
 
     @ingroup FastBitExamples
 */
@@ -202,7 +202,7 @@ static void usage(const char* name) {
 #else
               << "FastBit ibis1.2"
 #endif
-              << ", Copyright (c) 2000-2016\n\nList of options for " << name
+              << ", Copyright (c) 2000-2020\n\nList of options for " << name
               << "\n\t[-a[ppend] data_dir [output_dir / partition_name]]"
         "\n\t[-b[uild-indexes] [numThreads|indexSpec] -z[ap-existing-indexes]]"
         "\n\t[-c[onf] conf_file]"
@@ -350,9 +350,9 @@ static void printColumn(const ibis::part& tbl, const char* cname,
     else if (nb != (long)counts.size() || bounds.size() != counts.size()+1) {
         ibis::util::logger lg;
         lg() << "get1DDistribution return value (" << nb
-             << ") does match the size of array counts ("
-             << counts.size() << ") or bounds.size(" << bounds.size()
-             << ") does not equual to 1+counts.size (" << counts.size();
+             << ") does match the size of array counts (" << counts.size()
+             << "), or bounds.size(" << bounds.size()
+             << ") does not equal to 1+counts.size (" << counts.size() << ')';
         return;
     }
     else {
@@ -1907,14 +1907,15 @@ static void readQueryFile(const char *fname, std::vector<std::string> &queff) {
     }
 } // readQueryFile
 
-/// Generate random queries for testing.  Use pt to get the column names.
+/// Generate random queries for testing.  Use @c pt to get the column
+/// names.
+/// Adds @c mq new random queries.  Keeps the existing content of qlist and
+/// queff, append the new queries to the end of qlist and queff.
 static void randomQueries(const ibis::part& pt, unsigned mq,
                           std::vector<const char*> &qlist,
                           std::vector<std::string> &queff) {
-    qlist.clear();
-    queff.clear();
-
 #define maxselect 8
+    unsigned existing = queff.size();
     unsigned maxwhere = 5;
     if (maxwhere > pt.nColumns()/2)
         maxwhere = pt.nColumns()/2;
@@ -1923,7 +1924,7 @@ static void randomQueries(const ibis::part& pt, unsigned mq,
     const char selstr[][maxselect] =
         {"floor", "sum", "stdev", "avg", "ceil", "min", "max", "var"};
     ibis::part::info p0(pt);
-    ibis::MersenneTwister mt; // a random number generator
+    static ibis::MersenneTwister mt(1997); // a random number generator
     for (unsigned j = 0; j < mq; ++ j) {
         std::ostringstream oss;
         unsigned nsel = mt.next(maxselect * maxwhere);
@@ -2022,12 +2023,13 @@ static void randomQueries(const ibis::part& pt, unsigned mq,
         queff.push_back(oss.str());
     }
 
-    qlist.reserve(queff.size());
-    for (unsigned j = 0; j < queff.size(); ++ j)
+    qlist.reserve(qlist.size()+mq);
+    for (unsigned j = existing; j < queff.size(); ++ j)
         qlist.push_back(queff[j].c_str());
     LOGGER(ibis::gVerbose > 0)
-        << "randomQueries generated " << qlist.size() << " random quer"
-        << (qlist.size()>1?"ies":"y");
+        << "randomQueries added " << mq << " random quer"
+        << (mq>1?"ies":"y") << " to increase the list of queries to "
+        << qlist.size();
 } // randomQueries
 
 static std::vector<const char*> dirs;  // directories specified on command line
@@ -2346,6 +2348,7 @@ static void parse_args(int argc, char** argv, int& mode,
                         i = i + 1;
                     }
                     else if (std::isalpha(*argv[i+1])) {
+                        // assume to be a name of column to sort with
                         slist.push_back(argv[i+1]);
                         i = i + 1;
                     }
@@ -2359,6 +2362,7 @@ static void parse_args(int argc, char** argv, int& mode,
 #else
                 if (i+1 < argc) {
                     if (std::isalpha(*argv[i+1])) {
+                        // assume to be a name of column to sort with
                         slist.push_back(argv[i+1]);
                         i = i + 1;
                     }
@@ -2502,7 +2506,7 @@ static void parse_args(int argc, char** argv, int& mode,
             std::clog << *argv << " will write messages to " << mesgfile
                       << std::endl;
     }
-    if (ibis::gVerbose > 1) {
+    if (ibis::gVerbose > 0) {
         ibis::util::logger lg;
         lg() << "\n" << *argv;
         if (ibis::gVerbose > 5) {
@@ -2597,7 +2601,7 @@ static void parse_args(int argc, char** argv, int& mode,
         //         ibis::util::gatherParts(ibis::datasets, rdirs[i]);
         // }
         if (str != 0 && str > rdirs[i] && str[1] != '/' && str[1] != '\\') {
-            has_collist= true;
+            has_collist = true;
             for (const char* tmp = rdirs[i]; tmp < str; ++ tmp) {
                 dir += *tmp;
             }
@@ -2801,7 +2805,7 @@ static void xdoQuery(ibis::part* tbl, const char* uid, const char* wstr,
         else {
             ibis::util::logger lg;
             if (outputname != 0)
-            lg() << "Warning ** xdoQuery failed to open \""
+            lg() << "Warning -- xdoQuery failed to open \""
                  << outputname << "\" for writing query ("
                  << aQuery.getWhereClause() << ")";
             printQueryResults(lg(), aQuery);
@@ -3099,9 +3103,6 @@ static void tableSelect(const ibis::partList &pl, const char* uid,
             sel1->dumpNames(lg(), ", ");
         sel1->dump(lg(), start, limit, ", ");
     }
-    else if (outputbinary) {
-        if (zapping)
-            ibis::util::removeDir(outputname);
 
     if (recheckvalues && sel1->nRows() > 1 && sel1->nColumns() > 0) {
         // query the list of values selected by the 1st column
@@ -3728,7 +3729,7 @@ static void doQuery(ibis::part* tbl, const char* uid, const char* wstr,
         else {
             ibis::util::logger lg;
             if (0 != outputname) {
-                lg() << "Warning ** doQuery failed to open file \""
+                lg() << "Warning -- doQuery failed to open file \""
                      << outputname << "\" for writing query ("
                      << aQuery.getWhereClause() << ")\n";
             }
@@ -3787,7 +3788,7 @@ static void doQuery(ibis::part* tbl, const char* uid, const char* wstr,
             num2 = btmp.cnt();
             if (num1 != num2 && ibis::gVerbose >= 0) {
                 ibis::util::logger lg;
-                lg() << "Warning ** query \"" << aQuery.getWhereClause()
+                lg() << "Warning -- query \"" << aQuery.getWhereClause()
                      << "\" generated " << num1
                      << " hit" << (num1 >1  ? "s" : "")
                      << " with evaluate(), but generated "
@@ -5240,13 +5241,7 @@ int main(int argc, char** argv) {
             slist.clear(); // no longer needed
         }
 
-        if (testing > 0 && ! ibis::datasets.empty() && threading > 0 &&
-            qlist.empty()) { // generate random queries
-            const unsigned mq = 
-                (testing > (threading+threading) ? testing : (threading+threading));
-            randomQueries(*ibis::datasets[0], mq, qlist, queff);
-        }
-        else if (testing > 0 && ! ibis::datasets.empty()) {
+        if (testing > 0 && ! ibis::datasets.empty()) {
             // performing self test
             LOGGER(ibis::gVerbose > 0) << *argv << ": start testing ...";
             ibis::horometer timer3;
@@ -5254,7 +5249,7 @@ int main(int argc, char** argv) {
             for (ibis::partList::const_iterator it = ibis::datasets.begin();
                  it != ibis::datasets.end(); ++ it) {
                 // tell the partition to perform self tests
-                long nerr = (*it)->selfTest(testing);
+                long nerr = (*it)->selfTest(threading);
                 (*it)->unloadIndexes();
 
                 if (ibis::gVerbose >= 0) {
@@ -5276,6 +5271,14 @@ int main(int argc, char** argv) {
                 << " data partition" << (ibis::datasets.size()>1 ? "s" : "")
                 << " took " << timer3.CPUTime() << " CPU seconds, "
                 << timer3.realTime() << " elapsed seconds\n";
+        }
+
+        if (! ibis::datasets.empty() && testing > 1 && 
+            (threading > qlist.size() || testing > qlist.size() || qlist.empty())) {
+            // generate random queries for testing
+            const unsigned mq = 8 + 
+                (testing > (threading+threading) ? testing : (threading+threading));
+            randomQueries(*ibis::datasets[0], mq, qlist, queff);
         }
 
         if (ibis::datasets.empty() && !qlist.empty()) {
@@ -5393,25 +5396,23 @@ int main(int argc, char** argv) {
             << " s, total elapsed time " << timer.realTime() << " s";
 
         clean_up(true);
-        // last thing -- close the file logging the messages
-        //ibis::util::closeLogFile();
         return 0;
     }
     catch (const std::exception& e) {
         LOGGER(ibis::gVerbose >= 0)
-            << "Warning ** " << *argv
+            << "Warning -- " << *argv
             << " received a standard exception\n" << e.what();
         return -10;
     }
     catch (const char* s) {
         LOGGER(ibis::gVerbose >= 0)
-            << "Warning ** " << *argv
+            << "Warning -- " << *argv
             << " received a string exception\n" << s;
         return -11;
     }
     catch (...) {
         LOGGER(ibis::gVerbose >= 0)
-            << "Warning ** " << *argv
+            << "Warning -- " << *argv
             << " received an unexpected exception";
         return -12;
     }

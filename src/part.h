@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at ACM.org>
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 #ifndef IBIS_PART_H
 #define IBIS_PART_H
 ///@file
@@ -513,6 +513,15 @@ public:
 
     /// Obsolete histogram functions.  Avoid using these functions.  They
     /// might be removed without notice.
+    ///
+    /// @warning This set of functions attempts to figure how bins to use.
+    /// It will attempt to remove all empty bins, and therefore may return
+    /// fewer bins that expected.
+    /// 
+    /// @warning NONE of these functions can take user provided bin
+    /// boundaries as input!
+    /// 
+    /// @sa ibis::column::getDistribution
     /// @{
     /// Compute the binned distribution of the named variable.
     long getDistribution(const char *name,
@@ -529,7 +538,7 @@ public:
 			 double *bounds, uint32_t *counts) const;
     /// Compute the conditional binned data distribution with the specified
     /// maximum number of bins.
-    long getDistribution(const char *name, const char *constraints,
+    long getDistribution(const char *constraints, const char *name,
 			 uint32_t nbc, double *bounds,
 			 uint32_t *counts) const;
 
@@ -1440,7 +1449,8 @@ namespace ibis {
 } // namespace ibis
 
 /// A simple class to describe an ibis::part object.  All members are
-/// public and read-only.  An info object can not last longer than the
+/// public and read-only.
+/// \warning An info object can not last longer than the
 /// ibis::part object used to create it.
 struct FASTBIT_CXX_DLLSPEC ibis::part::info {
     const char* name;		///!< Partition name.

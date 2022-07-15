@@ -1,5 +1,5 @@
 // $Id$
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 // Author: John Wu <John.Wu at acm.org>
 //      Lawrence Berkeley National Laboratory
 //
@@ -2003,7 +2003,7 @@ int ibis::util::writeLogFileHeader(FILE *fptr, const char *fname) {
         std::ostringstream oss;
         oss << ibis::util::getVersionNumber();
         tmp += oss.str();
-        tmp += ", Copyright (c) (2000)-2016";
+        tmp += ", Copyright (c) (2000)-2017";
         str = tmp.c_str();
     }
     int ierr = 0;
@@ -2180,13 +2180,6 @@ ibis::util::logger::~logger() {
 std::string ibis::util::logger::str() const {
     return mybuffer.str();
 } // ibis::util::logger::str
-
-/// Return a nil-terminated version of the string steam content.  This
-/// function relies on the function std::ostringstream::str, which makes
-/// copy of the string stream buffer.
-const char* ibis::util::logger::c_str() const {
-    return mybuffer.str().c_str();
-} // ibis::util::logger::c_str
 
 /// Constructor.  The caller must provide a message string.  If
 /// ibis::gVerbose is no less than lvl, it will create an ibis::horometer

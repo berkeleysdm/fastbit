@@ -1,6 +1,6 @@
 // File: $Id$
 // Author: John Wu <John.Wu at acm.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2000-2016 the Regents of the University of California
+// Copyright (c) 2000-2020 the Regents of the University of California
 #ifndef IBIS_UTIL_H
 #define IBIS_UTIL_H
 ///@file
@@ -306,7 +306,7 @@ inline uint64_t _rotl64( uint64_t x, int8_t r ) {
 
 // // The function isfinite is a macro defined in math.h according to
 // // opengroup.org.  As of 2011, only MS visual studio does not have a
-// // definition for isfinite, but it has _finite in float,h.
+// // definition for isfinite, but it has _finite in float.h.
 // #if defined(_MSC_VER) && defined(_WIN32)
 // inline int isfinite(double x) {return _finite(x);}
 // #elif !defined(isfinite)
@@ -314,7 +314,7 @@ inline uint64_t _rotl64( uint64_t x, int8_t r ) {
 // #endif
 #define IBIS_2STR(x) #x
 #define IBIS_INT_STR(x) IBIS_2STR(x)
-#define IBIS_FILE_LINE " -- " __FILE__ ":" IBIS_INT_STR(__LINE__)
+#define IBIS_FILE_LINE " @@ " __FILE__ ":" IBIS_INT_STR(__LINE__)
 
 #define LOGGER(v)                                       \
     if (false == (v)) ; else ibis::util::logger(0)() 
@@ -444,9 +444,9 @@ namespace ibis {
     /// A specialization of std::bad_alloc.
     class bad_alloc : public std::bad_alloc {
     public:
-        /// Constructor.  The argument is expected to be a static string so
-        /// that there is no need to allocate any memory for the error
-        /// message.
+        /// Constructor.
+        /// @note The argument is expected to be a static string so that
+        /// there is no need to allocate any memory for the error message.
         bad_alloc(const char *m="unknown") throw() : mesg_(m) {};
         virtual ~bad_alloc() throw() {}
         virtual const char* what() const throw() {return mesg_;}
@@ -649,14 +649,14 @@ namespace ibis {
         /// Return an integer designating the version of this software.
         /// The version number is composed of four segments each with two
         /// decimal digits.  For example, version 1.3.0.2 will be
-        /// represented as 1030002.  The stable releases typically have
-        /// the last segment as zero, which is generally referred to
-        /// without the last ".0".
+        /// represented as 1030002 (in decimal, not hexadecimal).  The
+        /// stable releases typically have the last segment as zero, which
+        /// is generally referred to without the last ".0".
         inline int getVersionNumber() {
 #ifdef FASTBIT_IBIS_INT_VERSION
             return FASTBIT_IBIS_INT_VERSION;
 #else
-            return 1030000;
+            return 2000300;
 #endif
         }
 
@@ -687,13 +687,15 @@ namespace ibis {
         } // clearVec
 
         /// A class for logging messages.  The caller writes message to a
-        /// std::ostream returned by the function buffer as if to
-        /// std::cout.  Note that messages are stored in this buffer and
-        /// written out in the destructor of this class.  There is a macro
-        /// LOGGER that can simplify some of the routine stuff.  Use
-        /// function ibis::util::setLogFile to explicit name of the log
-        /// file or use RC file entry logfile to specify a file name.  By
-        /// default all messages are dump to stdout.
+        /// std::ostream returned by the operation() as if to std::cout.
+        /// There is a macro LOGGER that can simplify some of the routine
+        /// stuff.  Use function ibis::util::setLogFile to explicit name of
+        /// the log file or use RC file entry logfile to specify a file
+        /// name.  By default all messages are dump to stdout.
+        ///
+        /// @note The messages are stored in an output string stream object
+        /// holding the content in memory.  The content is written out in
+        /// the destructor of this class.
         class FASTBIT_CXX_DLLSPEC logger {
         public:
             /// Constructor.
@@ -703,7 +705,6 @@ namespace ibis {
             /// Return an output stream for caller to build a message.
             std::ostream& operator()(void) {return mybuffer;}
             std::string str() const;
-            const char* c_str() const;
 
         protected:
             /// The message is stored in this buffer.

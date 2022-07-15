@@ -14,12 +14,13 @@ if (! ${SYS}) {
 }
 print "Configuring on ${HOSTNAME} with ${SYS}\n";
 
-if (${HOSTNAME} =~ m/^bit/) {
+if (${HOSTNAME} =~ m/^kwu\-/) {
   # on a Mac used by a developer, enable maintainer mode, use debug options # CC=gcc-mp-4.7 CXX=g++-mp-4.7 # CC=clang CXX=clang++ -gdwarf-2
-  # -DFASTBIT_RECURSIVE_UNLOAD 
-  $cmd="./configure --prefix=${HOME}/tmp --enable-maintainer-mode --with-java CFLAGS='-g -O0 -Wall' CXXFLAGS='-g -O0 -Wall'";
-} elsif (${HOSTNAME} =~ m/^data5[.lbl.gov]?$/) {
-  # on data5, know where is java and where to install, use extra optimization
+  # -DFASTBIT_RECURSIVE_UNLOAD  -Wall -Wall
+  #$cmd="CC=gcc-11 CXX=g++-11 ./configure --prefix=${HOME}/tmp --enable-maintainer-mode --with-java CFLAGS='-g -O0 -Wno-deprecated-declarations' CXXFLAGS='-std=c++17 -g -O0 -Wno-register -Wno-deprecated-declarations'";
+  $cmd="CC=clang CXX=clang++ ./configure --prefix=${HOME}/tmp --enable-maintainer-mode --with-java CFLAGS='-g -O0 -Wno-deprecated-declarations' CXXFLAGS='-std=c++17 -g -O0 -Wno-register -Wno-deprecated-declarations'";
+} elsif (${HOSTNAME} =~ m/^data\w+[.lbl.gov]?$/) {
+  # on dataXYZ, know where is java and where to install, use extra optimization
   $cmd="./configure --enable-xopt --disable-debug --with-java=/software/jdk1.7.0 --prefix=/data/john/Linux";
 } elsif (${HOSTNAME} =~ m/^d\w+[.lbl.gov]?$/) {
   # on sdm group's linux machines, know where is java and where to install
@@ -27,8 +28,10 @@ if (${HOSTNAME} =~ m/^bit/) {
 } elsif (${HOSTNAME} =~ m/^cori\w+[.nersc.gov]?$/) {
   # on the front end of cori at NERSC, there is a choice to be made about what compiler to use
   # print "\nPlease make sure that PrgEnv-gnu is used, for example by executing 'module swap PrgEnv-intel PrgEnv-gnu'\n\n";
-  $cmd="./configure --without-getpwuid --with-quiet-nan CFLAGS='-fPIC -O3 -std=c++11' CXXFLAGS='-fPIC -O3 -std=c++11' --without-java --prefix=/project/projectdirs/m1248/pkgs/cori/gnu";
+  #$cmd="./configure --without-getpwuid --with-quiet-nan CFLAGS='-fPIC -O3 -std=c++11' CXXFLAGS='-fPIC -O3 -std=c++11' --without-java --prefix=/project/projectdirs/m1248/pkgs/cori/gnu";
   #$cmd="./configure CC=pgcc CXX=pgCC --without-getpwuid --with-quiet-nan CFLAGS='-fPIC -O3' CXXFLAGS='-fPIC -O3' --without-java --prefix=/project/projectdirs/m1248/pkgs/cori/pgi";
+  #$cmd="./configure CC=cc CXX=CC --without-getpwuid --with-quiet-nan CFLAGS='-fPIC -O3' CXXFLAGS='-fPIC -O3' --without-java --prefix=/project/projectdirs/m1248/pkgs/cori/intel";
+  $cmd="./configure CC=cc CXX=CC --without-getpwuid --with-quiet-nan CFLAGS='-fPIC -O0 -g' CXXFLAGS='-fPIC -O0 -g' --without-java --prefix=/project/projectdirs/m1248/pkgs/cori/intel";
 } elsif (${HOSTNAME} =~ m/^edison\w+[.nersc.gov]?$/) {
   # on the front end of edison at NERSC, the default compiler is from Intel
   print "\nPlease make sure that PrgEnv-gnu is used, for example by executing 'module swap PrgEnv-intel PrgEnv-gnu'\n\n";

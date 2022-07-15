@@ -1,7 +1,7 @@
 /* File: $Id$
    Author: John Wu <John.Wu at acm.org>
       Lawrence Berkeley National Laboratory
-   Copyright (c) 2001-20164-2014 the Regents of the University of California
+   Copyright (c) 2001-2020 the Regents of the University of California
 */
 #include "iapi.h"
 #include "bord.h"
@@ -10,6 +10,8 @@
 #include "countQuery.h"
 #include <memory>       // std::unique_ptr
 #include <unordered_map>
+#include <iostream>
+#include <locale>
 
 /// A global variable in the file scope to hold all the active arrays known
 /// to this interface.
@@ -648,53 +650,56 @@ void fastbit_iapi_reregister_array(uint64_t i) {
     __fastbit_iapi_name_map[col->name()] = i;
     switch (col->type()) {
     default:
+        LOGGER(ibis::gVerbose > 0)
+            << "Warning -- fastbit_iapi_reregister_array(" << i
+            << ") can not  handle column type " << ibis::TYPESTRING[(int)col->type()];
         break;
-    case FastBitDataTypeByte: {
+    case ibis::TYPE_T::BYTE: {
         ibis::array_t<signed char> *buf =
             static_cast<ibis::array_t<signed char>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeUByte: {
+    case ibis::TYPE_T::UBYTE: {
         ibis::array_t<unsigned char> *buf =
             static_cast<ibis::array_t<unsigned char>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeShort: {
+    case ibis::TYPE_T::SHORT: {
         ibis::array_t<int16_t> *buf =
             static_cast<ibis::array_t<int16_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeUShort: {
+    case ibis::TYPE_T::USHORT: {
         ibis::array_t<uint16_t> *buf =
             static_cast<ibis::array_t<uint16_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeInt: {
+    case ibis::TYPE_T::INT: {
         ibis::array_t<int32_t> *buf =
             static_cast<ibis::array_t<int32_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeUInt: {
+    case ibis::TYPE_T::UINT: {
         ibis::array_t<uint32_t> *buf =
             static_cast<ibis::array_t<uint32_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeLong: {
+    case ibis::TYPE_T::LONG: {
         ibis::array_t<int64_t> *buf =
             static_cast<ibis::array_t<int64_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeULong: {
+    case ibis::TYPE_T::ULONG: {
         ibis::array_t<uint64_t> *buf =
             static_cast<ibis::array_t<uint64_t>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeFloat: {
+    case ibis::TYPE_T::FLOAT: {
         ibis::array_t<float> *buf =
             static_cast<ibis::array_t<float>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
         break;}
-    case FastBitDataTypeDouble: {
+    case ibis::TYPE_T::DOUBLE: {
         ibis::array_t<double> *buf =
             static_cast<ibis::array_t<double>*>(col->getArray());
         __fastbit_iapi_address_map[buf->begin()] = i;
@@ -1886,10 +1891,6 @@ extern "C" int fastbit_iapi_register_array_index_only
 /// @arg iopt: indexing option
 ///
 /// Returns 0 for success, a negative number for any error or failure.
-///
-/// @note If one of nkeys, noffsets or nbitmaps is nil, then none of them
-/// will be assigned a value.  This is taken as the user does not want to
-/// write the index out.
 extern "C" int fastbit_iapi_build_index
 (const char *aname, const char *iopt) {
     if (aname == 0 || *aname == 0)
@@ -1912,6 +1913,9 @@ extern "C" int fastbit_iapi_build_index
     return 0;
 } // fastbit_iapi_build_index
 
+/// @note If one of nkeys, noffsets or nbitmaps is nil, then none of them
+/// will be assigned a value.  This is taken as the user does not want to
+/// write the index out.
 extern "C" int fastbit_iapi_deconstruct_index
 (const char *aname, double **keys, uint64_t *nkeys,
  int64_t **offsets, uint64_t *noffsets,
@@ -2069,7 +2073,7 @@ extern "C" FastBitSelectionHandle fastbit_selection_osr
         LOGGER(ibis::gVerbose > 1)
             << "Warning -- fastbit_selection_osr failed to find an array named "
             << aname;
-            return 0;
+        return 0;
     }
 
     ibis::qExpr::COMPARE cmp = __fastbit_iapi_convert_compare_type(ctype);
@@ -2092,7 +2096,7 @@ extern "C" FastBitSelectionHandle fastbit_selection_osr
 /**
    @warning the selection/query must have been evaluated already, otherwise
    ther is no bitvector to be used for this function.
- */
+*/
 extern "C" int fastbit_iapi_register_selection_as_bit_array
 (const char *nm, FastBitSelectionHandle h) {
     ibis::bitvector *bv =
@@ -2103,9 +2107,9 @@ extern "C" int fastbit_iapi_register_selection_as_bit_array
 } // fastbit_iapi_register_selection_as_bit_array
 
 /** 
-   @warning the selection/query must have been evaluated already, otherwise
-   ther is no bitvector to be used for this function.
- */
+    @warning the selection/query must have been evaluated already, otherwise
+    ther is no bitvector to be used for this function.
+*/
 extern "C" int fastbit_iapi_extend_bit_array_with_selection
 (const char *nm, FastBitSelectionHandle h) {
     ibis::bitvector *bv =
@@ -2115,3 +2119,135 @@ extern "C" int fastbit_iapi_extend_bit_array_with_selection
         (nm, FastBitDataTypeBitCompressed, bv, bv->size());
 } // fastbit_iapi_extend_bit_array_with_selection
 
+
+namespace ibis {
+    /// Initializes the memory manager of FastBit.  It reads the RC file
+    /// (rcfile) first before initializes the memory manager.  If the
+    /// caller wishes to read multiple RC files or add parameters to
+    /// ibis::gParameters, these operations need to take place before
+    /// calling this function or any function that creates, initializes or
+    /// uses ibis::array_t, ibis::bitvector, ibis::part or ibis::table.  If
+    /// the user neglects to call ibis::init, the memory manager will be
+    /// initialized when the first time it is needed.
+    ///
+    /// @param rcfile A file containing name-value pairs that specifies
+    ///   parameters for controlling the behavior of ibis.
+    /// @param mesgfile Name of the file to contain messages printed by
+    ///   FastBit functions.
+    ///
+    /// If an RC file is not specified or the file name is null, this
+    /// function will attempt to read one of the following file (in the
+    /// given order).
+    ///   -# a file named in environment variable IBISRC,
+    ///   -# a file named ibis.rc in the current working directory,
+    ///   -# a file named .ibisrc in the user's home directory.
+    ///   .
+    /// In an RC file, one parameter occupies a line and the equal sign
+    /// "=" is required to delimit the name and the value, for example,
+    ///
+    ///@verbatim
+    ///   dataDir = /data/dns
+    ///   cacheDir = /tmp/ibiscache
+    ///@endverbatim
+    ///
+    /// The minimal recommended parameters of an RC file are
+    ///   - dataDir, which can also be written as dataDir1 or indexDir.  It
+    ///     tells ibis where to find the data to be queried.  Multiple data
+    ///     directories may be specified by adding prefix to the parameter
+    ///     name, for example, dns.dataDir and random.dataDir.
+    ///   - cacheDir, which can also be written as cacheDirectory.  This
+    ///     directory is used by ibis to write internal data for recovery
+    ///     and other purposes.
+    ///
+    /// The message file (also called the log file) name may also be
+    /// specified in the RC file under the key logfile, e.g.,
+    ///
+    ///@verbatim
+    ///   logfile = /tmp/ibis.log
+    ///@endverbatim
+    ///
+    /// One may call ibis::util::closeLogFile to close the log file, but
+    /// this is not mandatory.  The runtime system will close all open
+    /// files upon the termination of the user program.
+    void init(const char* rcfile, const char* mesgfile) {
+#if defined(DEBUG) || defined(_DEBUG)
+        if (gVerbose <= 0) {
+#if DEBUG + 0 > 10 || _DEBUG + 0 > 10
+            gVerbose = INT_MAX;
+#elif DEBUG + 0 > 0
+            gVerbose += 7 * DEBUG;
+#elif _DEBUG + 0 > 0
+            gVerbose += 5 * _DEBUG;
+#else
+            gVerbose += 3;
+#endif
+        }
+#endif
+        int ierr;
+        // attempt to synchronize the style of printing from all streams
+        setlocale(LC_ALL, "");
+#if defined(PTW32_STATIC_LIB)
+        if (ibis::util::envLock == PTHREAD_MUTEX_INITIALIZER) {
+            ierr = pthread_mutex_init(&ibis::util::envLock, 0);
+            if (ierr != 0)
+                throw "ibis::init failed to initialize ibis::util::envLock";
+        }
+#endif
+        if (mesgfile != 0 && *mesgfile != 0) {
+            ierr = ibis::util::setLogFileName(mesgfile);
+            if (ierr < 0 && ibis::gVerbose >= 0) {
+                std::cerr << "ibis::init failed to set log file to "
+                          << mesgfile << std::endl;
+            }
+        }
+
+        if (0 != atexit(ibis::util::closeLogFile)) {
+            if (ibis::gVerbose >= 0)
+                std::cerr << "ibis::init failed to register the function "
+                    "ibis::util::closeLogFile with atexit" << std::endl;
+        }
+        // if (0 != atexit(ibis::util::clearDatasets)) {
+        //     if (ibis::gVerbose >= 0)
+        // 	std::cerr << "ibis::init failed to register the function "
+        // 	    "ibis::util::clearDatasets with atexit" << std::endl;
+        // }
+
+        ierr = ibis::gParameters().read(rcfile);
+        if (ierr < 0)
+            std::cerr << "ibis::init failed to open configuration file \""
+                      << (rcfile!=0&&*rcfile!=0 ? rcfile : "") << '"'
+                      << std::endl;
+        (void) ibis::fileManager::instance(); // initialize the file manager
+        if (! ibis::gParameters().empty()) {
+            ierr = ibis::util::gatherParts(ibis::datasets, ibis::gParameters());
+            if (ibis::gVerbose > 0 && ierr > 0)
+                std::cerr << "ibis::init found " << ierr << " data partition"
+                          << (ierr > 1 ? "s" : "") << std::endl;
+        }
+#if defined(_WIN32) && defined(_MSC_VER) && (defined(_DEBUG) || defined(DEBUG))
+        std::cerr << "DEBUG - WIN32 related macros";
+#ifdef NTDDI_VERSION
+        std::cerr << "\nNTDDI_VERSION=" << std::hex << NTDDI_VERSION
+                  << std::dec;
+#endif
+#ifdef NTDDI_WINVISTA
+        std::cerr << "\nNTDDI_WINVISTA=" << std::hex << NTDDI_WINVISTA
+                  << std::dec;
+#endif
+#ifdef WINVER
+        std::cerr << "\nWINVER=" << std::hex << WINVER << std::dec;
+#endif
+#if defined(HAVE_WIN_ATOMIC32)
+        std::cerr << "\nHAVE_WIN_ATOMIC32 true";
+#else
+        std::cerr << "\nHAVE_WIN_ATOMIC32 flase";
+#endif
+#if defined(HAVE_WIN_ATOMIC64)
+        std::cerr << "\nHAVE_WIN_ATOMIC64 true";
+#else
+        std::cerr << "\nHAVE_WIN_ATOMIC64 flase";
+#endif
+        std::cerr << std::endl;
+#endif
+    }
+}

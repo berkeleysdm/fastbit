@@ -12,7 +12,7 @@
    in the string search function ibis::text::stringSearch.
  */
 #include "ibis.h"
-#include <memory>	// std::auto_ptr
+#include <memory>	// std::unique_ptr
 
 /// Encapsulate the testing functions.
 class tester {
@@ -42,7 +42,7 @@ tester::~tester() {
 /// J repeated J times.
 void tester::builtindata(const char *datadir) {
     ibis::table::row irow;
-    std::auto_ptr<ibis::tablex> ta(ibis::tablex::create());
+    std::unique_ptr<ibis::tablex> ta(ibis::tablex::create());
 
     ta->addColumn("l", ibis::LONG);
 
@@ -67,7 +67,7 @@ void tester::load(const char *datadir) {
     if (datadir == 0 || *datadir == 0) return;
 
     try { // use existing data records
-	std::auto_ptr<ibis::table> table(ibis::table::create(datadir));
+	std::unique_ptr<ibis::table> table(ibis::table::create(datadir));
 	if (table.get() == 0) {
 	    LOGGER(ibis::gVerbose >= 0)
 		<< "failed to load table from " << datadir;
@@ -79,7 +79,7 @@ void tester::load(const char *datadir) {
 	    table->addPartition(datadir);
 	}
 
-	std::auto_ptr<ibis::table> select(table->select("", "1=1"));
+	std::unique_ptr<ibis::table> select(table->select("", "1=1"));
 	if (select.get() == 0) {
 	    LOGGER(ibis::gVerbose >= 0)
 		<< "failed to select all rows from table " << table->name();
@@ -102,7 +102,7 @@ void tester::load(const char *datadir) {
 void tester::query(const char *datadir, const char *where) {
     if (datadir == 0 || where == 0 || *datadir == 0 || *where == 0) return;
 
-    std::auto_ptr<ibis::table> table(ibis::table::create(datadir));
+    std::unique_ptr<ibis::table> table(ibis::table::create(datadir));
     if (table.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to load table from " << datadir;
@@ -133,14 +133,14 @@ void tester::query(const char *datadir, const char *where) {
 	selall += cnames[j];
     }
     // create in-memory table to process where
-    std::auto_ptr<ibis::table> inmemory(table->select(selall.c_str(), "1=1"));
+    std::unique_ptr<ibis::table> inmemory(table->select(selall.c_str(), "1=1"));
     if (inmemory.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to select all rows from table " << table->name();
 	return;
     }
     if (ibis::gVerbose > 0) { // an extra test with group-by
-	std::auto_ptr<ibis::table> groupby(inmemory->groupby(cnames.front()));
+	std::unique_ptr<ibis::table> groupby(inmemory->groupby(cnames.front()));
 	if (groupby.get() == 0) {
 	    LOGGER(ibis::gVerbose > 0)
 		<< "failed to evaluate groupby(" << cnames.front()
@@ -155,7 +155,7 @@ void tester::query(const char *datadir, const char *where) {
 
     std::string sel1 = cnames.front();
     sel1 += ", count(*)";
-    std::auto_ptr<ibis::table> select(inmemory->select(sel1.c_str(), where));
+    std::unique_ptr<ibis::table> select(inmemory->select(sel1.c_str(), where));
     if (select.get() == 0) {
 	LOGGER(ibis::gVerbose >= 0)
 	    << "failed to select \"" << where << "\" on table"

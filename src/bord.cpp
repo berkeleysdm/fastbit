@@ -1,6 +1,6 @@
 // File: $id$
 // Author: John Wu <John.Wu at ACM.org> Lawrence Berkeley National Laboratory
-// Copyright (c) 2007-2016 the Regents of the University of California
+// Copyright (c) 2007-2020 the Regents of the University of California
 //
 #if defined(_WIN32) && defined(_MSC_VER)
 #pragma warning(disable:4786)   // some identifier longer than 256 characters
@@ -119,15 +119,6 @@ ibis::bord::bord(const char *tn, const char *td, uint64_t nr,
             }
         }
     }
-
-    amask.set(1, nEvents);
-    state = ibis::part::STABLE_STATE;
-    LOGGER(ibis::gVerbose > 1)
-        << "Constructed in-memory data partition "
-        << (m_name != 0 ? m_name : "<unnamed>") << " -- " << m_desc
-        << " -- with " << columns.size() << " column"
-        << (columns.size() > 1U ? "s" : "") << " and " << nEvents
-        << " row" << (nEvents>1U ? "s" : "");
 } // ibis::bord::bord
 
 /// Constructor.  Produce a partition from the list of columns.  The number
@@ -3716,10 +3707,10 @@ long ibis::bord::reorder(const ibis::table::stringArray& cols,
                     oss << ", " << cols[i];
                 LOGGER(true)
                     << "Warning -- " << evt << " -- user specified ordering "
-                    "keys (" << oss.str() << ") contain too few distinct "
-                    "values, will order with all integer columns"
-                    << (diropt<0?" in the descending order":"");
+                    "keys (" << oss.str() << ") either have only one possible "
+                    "value or do not exist, return 0 now";
             }
+            return ierr;
         }
 
         load.clear();
@@ -5899,16 +5890,23 @@ long ibis::bord::column::evaluateRange(const ibis::qContinuousRange& cmp,
         ierr = -4;
         return ierr;
     }
-    if (! cmp.overlap(lower, upper)) {
-        res.set(0, mymask.size());
-        return 0;
-    }
 
     ibis::bitvector bv2;
     try {
         { // use a block to limit the scope of index lock
             indexLock lock(this, evt.c_str());
             if (idx != 0) {
+                if (idx->getNRows() == thePart->nRows()) {
+                    // assume the min/max from the index is reliable, the
+                    // nominal min/max in ibis::column is not reliable
+                    const double amin = idx->getMin();
+                    const double amax = idx->getMax();
+                    if (! cmp.overlap(amin, amax)) {
+                        res.set(0, idx->getNRows());
+                        return 0;
+                    }
+                }
+
                 if (hasRawData()) {
                     double cost = idx->estimateCost(cmp);
                     // use index only if the cost of using its estimate cost is
@@ -6124,14 +6122,21 @@ long ibis::bord::column::evaluateRange(const ibis::qDiscreteRange& cmp,
                                   cmp.getValues().back());
         return evaluateRange(cr, mask, res);
     }
-    if (! cmp.overlap(lower, upper)) {
-        res.set(0, mask.size());
-        return 0;
-    }
 
     try {
         indexLock lock(this, evt.c_str());
         if (idx != 0) {
+            if (idx->getNRows() == thePart->nRows()) {
+                // assume the min/max from the index is reliable, the
+                // nominal min/max in ibis::column is not reliable
+                const double amin = idx->getMin();
+                const double amax = idx->getMax();
+                if (! cmp.overlap(amin, amax)) {
+                    res.set(0, idx->getNRows());
+                    return 0;
+                }
+            }
+
             if (hasRawData()) { // consider both index and raw data
                 double idxcost = idx->estimateCost(cmp) *
                     (1.0 + log((double)cmp.getValues().size()));

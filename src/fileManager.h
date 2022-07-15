@@ -253,13 +253,13 @@ public:
     const char* filename() const {return name;}
 
     /// Is the storage object empty?
-    bool empty() const {return (m_begin == 0 || m_begin >= m_end);}
+    bool empty() const {return (m_begin == nullptr || m_begin >= m_end);}
     /// Return the size (bytes) of the object.
     size_t size() const {
-	return (m_begin!=0 && m_begin<m_end ? m_end-m_begin : 0);}
+	return (m_begin!=nullptr && m_begin<m_end ? m_end-m_begin : 0U);}
     /// Return the number of bytes contained in the object.
     size_t bytes() const {
-	return (m_begin!=0 && m_begin<m_end ? m_end-m_begin : 0);}
+	return (m_begin!=nullptr && m_begin<m_end ? m_end-m_begin : 0U);}
     void enlarge(size_t nelm=0);
 
     /// Release the control of the memory to the caller as a raw pointer.
@@ -328,7 +328,7 @@ public:
     virtual void beginUse();
     virtual void endUse();
     // is the read-only file mapped ?
-    virtual bool isFileMap() const {return (mapped != 0);}
+    virtual bool isFileMap() const {return (mapped != 0U);}
     int disconnectFile();
 
     // IO functions

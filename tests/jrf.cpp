@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
     if (nrpd > maxrow) nrpd = maxrow;
 
     ibis::table::row val;
-    std::auto_ptr<ibis::tablex> tab(ibis::tablex::create());
+    std::unique_ptr<ibis::tablex> tab(ibis::tablex::create());
     initColumns(*tab, val);
     ierr = tab->reserveBuffer(nrpd);
     if (ierr > 0 && (unsigned)ierr < nrpd)
